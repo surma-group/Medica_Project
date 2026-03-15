@@ -187,7 +187,8 @@
             @php
             $inventoryActive = request()->routeIs('brands.*')
             || request()->routeIs('categories.*')
-            || request()->routeIs('products.*');
+            || request()->routeIs('products.*')
+            || request()->routeIs('product_company.*');
             @endphp
 
             <li class="dropdown {{ $inventoryActive ? 'active' : '' }}">
@@ -197,6 +198,11 @@
                 </a>
 
                 <ul class="dropdown-menu" style="{{ $inventoryActive ? 'display:block;' : '' }}">
+                    <li class="{{ request()->routeIs('product_company.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('product_company.index') }}">
+                            Product Company
+                        </a>
+                    </li>
                     <li class="{{ request()->routeIs('brands.*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('brands.index') }}">
                             Brand

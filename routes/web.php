@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\ProductCompanyController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
@@ -200,6 +201,27 @@ Route::prefix('em_admin')->group(function () {
             'edit'    => 'brands.edit',
             'update'  => 'brands.update',
             'destroy' => 'brands.destroy',
+        ]);
+
+
+        // Import Product Company Page
+        Route::get('product_company/import', [ProductCompanyController::class, 'import'])
+            ->name('product_company.import');
+
+        Route::post('product_company/import', [ProductCompanyController::class, 'importStore'])
+            ->name('product_company.import.store');
+
+        Route::get('product_company/sample/download', [ProductCompanyController::class, 'sampleDownload'])
+            ->name('product_company.sample.download');
+        // Product Company routes
+        Route::resource('product_company', ProductCompanyController::class)->names([
+            'index'   => 'product_company.index',
+            'create'  => 'product_company.create',
+            'store'   => 'product_company.store',
+            'show'    => 'product_company.show',
+            'edit'    => 'product_company.edit',
+            'update'  => 'product_company.update',
+            'destroy' => 'product_company.destroy',
         ]);
         // Category routes
         Route::resource('categories', CategoryController::class)->names([
