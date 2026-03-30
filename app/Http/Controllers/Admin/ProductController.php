@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
+use App\Models\ProductGeneric;
+use App\Models\ProductCompany;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -14,46 +16,44 @@ use Illuminate\Support\Facades\Response;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of products.
-     */
     public function index()
     {
-        // Paginate products, latest first
         $products = Product::latest()->paginate(10);
         $units = Unit::where('status', true)->get();
+
         return view('admin.products.index', compact('products', 'units'));
     }
 
-    /**
-     * Show the form for creating a new product.
-     */
     public function create()
     {
         $categories = Category::where('status', 1)->get();
         $brands = Brand::where('status', 1)->get();
+        $generics = ProductGeneric::all();
+        $companies = ProductCompany::all();
+        // barcode optional now
+        $barcode = rand(100000000000, 999999999999);
 
-        // Auto generate unique barcode
-        do {
-            $barcode = rand(100000000000, 999999999999); // 12 digit random
-        } while (\App\Models\Product::where('barcode', $barcode)->exists());
-
-        return view('admin.products.form', compact('categories', 'brands', 'barcode'));
+        return view('admin.products.form', compact(
+            'categories',
+            'brands',
+            'generics',
+            'companies',
+            'barcode'
+        ));
     }
 
-    /**
-     * Store a newly created product in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'barcode' => 'required|string|max:50|unique:products,barcode',
-            'category_id' => 'required|exists:categories,id',
-            'brand_id' => 'required|exists:brands,id',
+            'barcode' => 'nullable|string|max:50|unique:products,barcode',
+            'category_id' => 'nullable|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'company_id' => 'nullable|exists:product_companies,id',
+            'generic_id' => 'nullable|exists:product_generics,id',
             'name' => 'required|string|max:255',
-            'generic_name' => 'nullable|string|max:255',
             'strength' => 'nullable|string|max:100',
             'manufacturer_name' => 'nullable|string|max:255',
+            'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|max:2048',
             'status' => 'required|in:0,1',
         ]);
@@ -62,10 +62,12 @@ class ProductController extends Controller
             'barcode',
             'category_id',
             'brand_id',
+            'company_id',
+            'generic_id',
             'name',
-            'generic_name',
             'strength',
             'manufacturer_name',
+            'price',
             'status',
         ]);
 
@@ -79,29 +81,34 @@ class ProductController extends Controller
             ->with('success', 'Product created successfully.');
     }
 
-    /**
-     * Show the form for editing the specified product.
-     */
     public function edit(Product $product)
     {
         $categories = Category::where('status', 1)->get();
         $brands = Brand::where('status', 1)->get();
-        return view('admin.products.form', compact('product', 'categories', 'brands'));
+        $generics = ProductGeneric::all();
+        $companies = ProductCompany::all();
+
+        return view('admin.products.form', compact(
+            'product',
+            'categories',
+            'brands',
+            'generics',
+            'companies'
+        ));
     }
 
-    /**
-     * Update the specified product in storage.
-     */
     public function update(Request $request, Product $product)
     {
         $request->validate([
-            'barcode' => 'required|string|max:50|unique:products,barcode,' . $product->id,
-            'category_id' => 'required|exists:categories,id',
-            'brand_id' => 'required|exists:brands,id',
+            'barcode' => 'nullable|string|max:50|unique:products,barcode,' . $product->id,
+            'category_id' => 'nullable|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'company_id' => 'nullable|exists:product_companies,id',
+            'generic_id' => 'nullable|exists:product_generics,id',
             'name' => 'required|string|max:255',
-            'generic_name' => 'nullable|string|max:255',
             'strength' => 'nullable|string|max:100',
             'manufacturer_name' => 'nullable|string|max:255',
+            'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|max:2048',
             'status' => 'required|in:0,1',
         ]);
@@ -110,16 +117,17 @@ class ProductController extends Controller
             'barcode',
             'category_id',
             'brand_id',
+            'company_id',
+            'generic_id',
             'name',
-            'generic_name',
             'strength',
             'manufacturer_name',
+            'price',
             'status',
         ]);
 
         if ($request->hasFile('image')) {
 
-            // Delete old image
             if ($product->image && \Storage::disk('public')->exists($product->image)) {
                 \Storage::disk('public')->delete($product->image);
             }
@@ -133,12 +141,8 @@ class ProductController extends Controller
             ->with('success', 'Product updated successfully.');
     }
 
-    /**
-     * Remove the specified product from storage.
-     */
     public function destroy(Product $product)
     {
-        // Delete image if exists
         if ($product->image && \Storage::disk('public')->exists($product->image)) {
             \Storage::disk('public')->delete($product->image);
         }
@@ -155,6 +159,8 @@ class ProductController extends Controller
         return view('admin.products.show', compact('product'));
     }
 
+    // ================= IMPORT =================
+
     public function import()
     {
         return view('admin.products.import');
@@ -163,55 +169,73 @@ class ProductController extends Controller
     public function importStore(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xls,xlsx,csv',
+            'file' => 'required|file|mimetypes:text/plain,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
 
         $file = $request->file('file');
 
-        // Get headings to validate format (optional)
         $headings = (new HeadingRowImport)->toArray($file)[0][0];
 
-        $expectedHeadings = ['barcode', 'category_id', 'brand_id', 'name', 'generic_name', 'strength', 'manufacturer_name', 'status'];
+        $expectedHeadings = [
+            'barcode',
+            'category_id',
+            'brand_id',
+            'company_id',
+            'generic_id',
+            'name',
+            'strength',
+            'manufacturer_name',
+            'price',
+            'status'
+        ];
 
         if ($headings !== $expectedHeadings) {
-            return redirect()->back()->withErrors(['file' => 'Excel file headings are incorrect. Please download the sample file.']);
+            return back()->withErrors(['file' => 'Invalid file format']);
         }
 
-        // Read Excel file
-        $rows = Excel::toArray([], $file)[0]; // First sheet
-
-        // Skip header row
+        $rows = Excel::toArray([], $file)[0];
         unset($rows[0]);
 
         $errors = [];
+
         foreach ($rows as $key => $row) {
             try {
-                // Validate each row
+
+                // ✅ Auto barcode generate if empty
+                $barcode = $row[0] ?? null;
+
+                if (empty($barcode)) {
+                    do {
+                        $barcode = rand(100000000000, 999999999999); // 12 digit
+                    } while (Product::where('barcode', $barcode)->exists());
+                }
+
                 $data = [
-                    'barcode' => (string) ($row[0] ?? ''),
+                    'barcode' => $barcode,
                     'category_id' => $row[1] ?? null,
                     'brand_id' => $row[2] ?? null,
-                    'name' => $row[3] ?? null,
-                    'generic_name' => $row[4] ?? null,
-                    'strength' => $row[5] ?? null,
-                    'manufacturer_name' => $row[6] ?? null,
-                    'status' => $row[7] ?? 1,
+                    'company_id' => $row[3] ?? null,
+                    'generic_id' => $row[4] ?? null,
+                    'name' => $row[5] ?? null,
+                    'strength' => $row[6] ?? null,
+                    'manufacturer_name' => $row[7] ?? null,
+                    'price' => $row[8] ?? 0,
+                    'status' => $row[9] ?? 1,
                 ];
 
-                // You can use Validator if needed
                 $validator = \Validator::make($data, [
-                    'barcode' => 'required|string|max:50|unique:products,barcode',
-                    'category_id' => 'required|exists:categories,id',
-                    'brand_id' => 'required|exists:brands,id',
+                    'barcode' => 'nullable|string|max:50|unique:products,barcode',
+                    'category_id' => 'nullable|exists:categories,id',
+                    'brand_id' => 'nullable|exists:brands,id',
+                    'company_id' => 'nullable|exists:product_companies,id',
+                    'generic_id' => 'nullable|exists:product_generics,id',
                     'name' => 'required|string|max:255',
-                    'generic_name' => 'nullable|string|max:255',
-                    'strength' => 'nullable|string|max:100',
-                    'manufacturer_name' => 'nullable|string|max:255',
+                    'price' => 'required|numeric|min:0',
                     'status' => 'required|in:0,1',
                 ]);
 
                 if ($validator->fails()) {
-                    $errors[$key + 2] = $validator->errors()->all(); // +2 because Excel rows start at 1 + header
+                    $errors[$key + 2] = $validator->errors()->all();
                     continue;
                 }
 
@@ -222,64 +246,64 @@ class ProductController extends Controller
         }
 
         if (!empty($errors)) {
-            return redirect()->back()->withErrors(['file' => 'Some rows failed to import: ' . json_encode($errors)]);
+            return back()->withErrors(['file' => json_encode($errors)]);
         }
 
-        return redirect()->route('products.index')->with('success', 'Products imported successfully!');
+        return redirect()->route('products.index')->with('success', 'Import successful');
     }
 
     public function sampleDownload()
     {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="products_sample.csv"',
+        $columns = [
+            'barcode',
+            'category_id',
+            'brand_id',
+            'company_id',
+            'generic_id',
+            'name',
+            'strength',
+            'manufacturer_name',
+            'price',
+            'status'
         ];
-
-        $columns = ['barcode', 'category_id', 'brand_id', 'name', 'generic_name', 'strength', 'manufacturer_name', 'status'];
 
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns); // header row
-            // Example rows
-            fputcsv($file, ['17890123', '1', '1', 'Paracetamol', 'Acetaminophen', '500mg', 'Acme Pharma', '1']);
-            fputcsv($file, ['93210987', '2', '3', 'Amoxicillin', 'Amoxil', '250mg', 'Global Pharma', '1']);
+            fputcsv($file, $columns);
+
+            fputcsv($file, ['123456', '1', '1', '1', '1', 'Paracetamol', '500mg', 'Acme', '10', '1']);
+
             fclose($file);
         };
 
-        return Response::stream($callback, 200, $headers);
+        return Response::stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=products_sample.csv',
+        ]);
     }
 
-    /**
-     * Set Base Unit, Secondary Unit, and Conversion Rate for a product.
-     */
-    /**
-     * Set Base Unit, Secondary Unit, and Conversion Rate for a product.
-     */
+    // ================= UNIT =================
+
     public function setUnit(Request $request, Product $product)
     {
-        // Custom validation rules
         $rules = [
             'base_unit_id' => ['required', 'exists:units,id', 'different:secondary_unit_id'],
             'secondary_unit_id' => ['nullable', 'exists:units,id', 'different:base_unit_id'],
-            // conversion_rate is required only if secondary_unit_id is present
             'conversion_rate' => ['nullable', 'numeric', 'min:0.01'],
         ];
 
-        // Conditional: if secondary_unit_id is selected, conversion_rate becomes required
         if ($request->filled('secondary_unit_id')) {
             $rules['conversion_rate'][] = 'required';
         }
 
-        // Validate the request
         $validated = $request->validate($rules);
 
-        // Update product unit fields
         $product->update([
             'base_unit_id' => $validated['base_unit_id'],
             'secondary_unit_id' => $validated['secondary_unit_id'] ?? null,
             'conversion_rate' => $validated['conversion_rate'] ?? null,
         ]);
 
-        return redirect()->back()->with('success', "Units for '{$product->name}' updated successfully.");
+        return back()->with('success', 'Unit updated successfully');
     }
 }

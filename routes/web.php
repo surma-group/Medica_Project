@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\ProductCompanyController;
+use App\Http\Controllers\Admin\ProductGenericController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
@@ -203,14 +204,33 @@ Route::prefix('em_admin')->group(function () {
             'destroy' => 'brands.destroy',
         ]);
 
+        // Import Product Generic Page
+        Route::get('product_generic/import', [ProductGenericController::class, 'import'])
+            ->name('product_generic.import');
+
+        Route::post('product_generic/import', [ProductGenericController::class, 'importStore'])
+            ->name('product_generic.import.store');
+
+        Route::get('product_generic/sample/download', [ProductGenericController::class, 'sampleDownload'])
+            ->name('product_generic.sample.download');
+
+
+        // Product Generic routes
+        Route::resource('product_generic', ProductGenericController::class)->names([
+            'index'   => 'product_generic.index',
+            'create'  => 'product_generic.create',
+            'store'   => 'product_generic.store',
+            'show'    => 'product_generic.show',
+            'edit'    => 'product_generic.edit',
+            'update'  => 'product_generic.update',
+            'destroy' => 'product_generic.destroy',
+        ]);
 
         // Import Product Company Page
         Route::get('product_company/import', [ProductCompanyController::class, 'import'])
             ->name('product_company.import');
-
         Route::post('product_company/import', [ProductCompanyController::class, 'importStore'])
             ->name('product_company.import.store');
-
         Route::get('product_company/sample/download', [ProductCompanyController::class, 'sampleDownload'])
             ->name('product_company.sample.download');
         // Product Company routes

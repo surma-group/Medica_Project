@@ -32,8 +32,9 @@ class ProductGeneric extends Model
     /**
      * Example relationship (if you have PregnancyCategory model)
      */
-    public function pregnancyCategory()
-    {
-        return $this->belongsTo(PregnancyCategory::class);
-    }
+    
+    // public function pregnancyCategory()
+    // {
+    //     return $this->belongsTo(PregnancyCategory::class);
+    // }
 }

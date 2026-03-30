@@ -13,11 +13,13 @@ class Product extends Model
         'barcode',
         'category_id',
         'brand_id',
+        'company_id',      // ✅ new
+        'generic_id',      // ✅ new
         'name',
-        'generic_name',
         'strength',
         'manufacturer_name',
         'image',
+        'price',           // ✅ new
         'status',
 
         'base_unit_id',
@@ -25,13 +27,14 @@ class Product extends Model
         'conversion_rate',
     ];
 
-    // Optionally cast conversion_rate as float
     protected $casts = [
         'status' => 'boolean',
         'conversion_rate' => 'float',
+        'price' => 'float', // ✅ new
     ];
 
-    // Relationships
+    // ================= Relationships =================
+
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -40,5 +43,28 @@ class Product extends Model
     public function brand()
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    // ✅ new
+    public function company()
+    {
+        return $this->belongsTo(ProductCompany::class);
+    }
+
+    // ✅ new
+    public function generic()
+    {
+        return $this->belongsTo(ProductGeneric::class);
+    }
+
+    // Optional (if you use units)
+    public function baseUnit()
+    {
+        return $this->belongsTo(Unit::class, 'base_unit_id');
+    }
+
+    public function secondaryUnit()
+    {
+        return $this->belongsTo(Unit::class, 'secondary_unit_id');
     }
 }
