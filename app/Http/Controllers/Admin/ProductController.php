@@ -13,15 +13,65 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;
 use Illuminate\Support\Facades\Response;
+use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
 {
-    public function index()
+
+
+    public function index(Request $request)
     {
-        $products = Product::latest()->paginate(10);
+        if ($request->ajax()) {
+
+            $query = Product::with(['category', 'generic'])
+                ->select('id', 'name', 'barcode', 'category_id', 'generic_id', 'image', 'status')
+                ->latest();
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+
+                ->addColumn('image', function ($row) {
+                    if ($row->image) {
+                        return '<img src="' . asset('storage/' . $row->image) . '" width="50" height="50" class="rounded">';
+                    }
+                    return '<span class="text-muted">No Image</span>';
+                })
+
+                ->addColumn('category', function ($row) {
+                    return $row->category->name ?? '-';
+                })
+
+                ->addColumn('generic', function ($row) {
+                    return $row->generic->generic_name ?? '-';
+                })
+
+                ->addColumn('status', function ($row) {
+                    return $row->status
+                        ? '<span class="badge bg-success">Active</span>'
+                        : '<span class="badge bg-danger">Inactive</span>';
+                })
+
+                ->addColumn('action', function ($row) {
+                    return '
+                    <a href="' . route('products.edit', $row->id) . '" class="btn btn-sm btn-primary">Edit</a>
+
+                    <form method="POST"
+                          action="' . route('products.destroy', $row->id) . '"
+                          style="display:inline-block"
+                          onsubmit="return confirm(\'Delete this product?\')">
+                        ' . csrf_field() . method_field('DELETE') . '
+                        <button class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                ';
+                })
+
+                ->rawColumns(['image', 'status', 'action'])
+                ->make(true);
+        }
+
         $units = Unit::where('status', true)->get();
 
-        return view('admin.products.index', compact('products', 'units'));
+        return view('admin.products.index', compact('units'));
     }
 
     public function create()
@@ -189,6 +239,9 @@ class ProductController extends Controller
             'status'
         ];
 
+        // normalize headings
+        $headings = array_map(fn($h) => strtolower(trim($h)), $headings);
+
         if ($headings !== $expectedHeadings) {
             return back()->withErrors(['file' => 'Invalid file format']);
         }
@@ -201,34 +254,50 @@ class ProductController extends Controller
         foreach ($rows as $key => $row) {
             try {
 
-                // ✅ Auto barcode generate if empty
+                // ✅ Clean values
+                $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
+
+                // ✅ Barcode
                 $barcode = $row[0] ?? null;
 
                 if (empty($barcode)) {
                     do {
-                        $barcode = rand(100000000000, 999999999999); // 12 digit
+                        $barcode = rand(100000000000, 999999999999);
                     } while (Product::where('barcode', $barcode)->exists());
                 }
 
+                // ✅ Safe foreign key resolver
+                $category_id = (!empty($row[1]) && \DB::table('categories')->where('id', (int)$row[1])->exists())
+                    ? (int)$row[1] : null;
+
+                $brand_id = (!empty($row[2]) && \DB::table('brands')->where('id', (int)$row[2])->exists())
+                    ? (int)$row[2] : null;
+
+                $company_id = (!empty($row[3]) && \DB::table('product_companies')->where('id', (int)$row[3])->exists())
+                    ? (int)$row[3] : null;
+
+                $generic_id = (!empty($row[4]) && \DB::table('product_generics')->where('id', (int)$row[4])->exists())
+                    ? (int)$row[4] : null;
+
+                // ✅ Price safe
+                $price = is_numeric($row[8]) ? $row[8] : 0;
+
                 $data = [
                     'barcode' => $barcode,
-                    'category_id' => $row[1] ?? null,
-                    'brand_id' => $row[2] ?? null,
-                    'company_id' => $row[3] ?? null,
-                    'generic_id' => $row[4] ?? null,
+                    'category_id' => $category_id,
+                    'brand_id' => $brand_id,
+                    'company_id' => $company_id,
+                    'generic_id' => $generic_id,
                     'name' => $row[5] ?? null,
                     'strength' => $row[6] ?? null,
                     'manufacturer_name' => $row[7] ?? null,
-                    'price' => $row[8] ?? 0,
-                    'status' => $row[9] ?? 1,
+                    'price' => $price,
+                    'status' => isset($row[9]) ? (int)$row[9] : 1,
                 ];
 
+                // ✅ Keep only important validation
                 $validator = \Validator::make($data, [
                     'barcode' => 'nullable|string|max:50|unique:products,barcode',
-                    'category_id' => 'nullable|exists:categories,id',
-                    'brand_id' => 'nullable|exists:brands,id',
-                    'company_id' => 'nullable|exists:product_companies,id',
-                    'generic_id' => 'nullable|exists:product_generics,id',
                     'name' => 'required|string|max:255',
                     'price' => 'required|numeric|min:0',
                     'status' => 'required|in:0,1',

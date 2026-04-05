@@ -17,7 +17,8 @@ class CompanyController extends Controller
     public function index()
     {
         $companies = Company::with(['district', 'currency', 'timezone'])
-            ->orderBy('id', 'desc'); // 10 per page
+            ->orderBy('id', 'desc')
+            ->paginate(10); // ✅ better for performance
 
         return view('admin.companies.index', compact('companies'));
     }

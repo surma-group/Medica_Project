@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -115,5 +116,8 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('systemBalance', $cashBalance);
         });
+
+        Paginator::useBootstrap();
     }
+    
 }
