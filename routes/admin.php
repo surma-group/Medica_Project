@@ -24,12 +24,14 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\ProductCompanyController;
 use App\Http\Controllers\Admin\ProductGenericController;
+use App\Http\Controllers\Admin\OrderController;
 
 /*
 |--------------------------------------------------------------------------
 | Admin Auth Routes
 |--------------------------------------------------------------------------
 */
+
 Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
 Route::post('login', [AdminAuthController::class, 'login']);
 Route::get('logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
@@ -40,7 +42,7 @@ Route::get('logout', [AdminAuthController::class, 'logout'])->name('admin.logout
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:admin'])->group(function () {
-    
+
     // Dashboard & Calendar
     Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/holiday-calendar', [HolidayController::class, 'calendar'])->name('admin.holiday.calendar');
@@ -51,7 +53,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::resource('departments', DepartmentController::class)->names('department');
     Route::resource('designation', DesignationController::class)->names('designation');
     Route::resource('branch', BranchController::class)->names('branch');
-    
+
     // Employee Management
     Route::resource('employees', EmployeeController::class);
     Route::get('employees/{employee}/print', [EmployeeController::class, 'print'])->name('employees.print');
@@ -64,7 +66,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::resource('salary_components', SalaryComponentController::class);
     Route::post('/salary/structure', [SalaryController::class, 'salaryStructureStore'])->name('salary.structure');
     Route::get('/salary/structure/{employee}', [SalaryController::class, 'salaryStructureShow'])->name('salary.structure.show');
-    
+
     Route::resource('salary_generate', SalaryGenerateController::class);
     Route::get('salary_generate/month/{month}', [SalaryGenerateController::class, 'show'])->name('salary_generate.show_by_month');
     Route::post('/salary/approve/{month}', [SalaryGenerateController::class, 'approve'])->name('salary.approve');
@@ -102,4 +104,9 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('products/set-unit/{product}', [ProductController::class, 'setUnit'])->name('products.unit.set');
     Route::resource('products', ProductController::class);
 
+    // Orders 
+    Route::resource('orders', OrderController::class)->names([
+        'index' => 'orders.index',
+        'show' => 'orders.show',
+    ]);
 });
