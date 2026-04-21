@@ -181,7 +181,7 @@ $subtotal = 0;
 
                     <div class="mt-4">
                         <div class="form-check">
-                            <input checked type="radio" name="payment" value="cod" class="form-check-input">
+                            <input checked type="radio" name="payment" value="1" class="form-check-input">
                             <label>Cash On Delivery</label>
                         </div>
                     </div>

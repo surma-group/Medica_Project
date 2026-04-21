@@ -228,6 +228,22 @@
                     </li>
                 </ul>
             </li>
+            @php
+            $ordersActive = request()->routeIs('orders.*');
+            @endphp
+
+            <li class="dropdown {{ $ordersActive ? 'active' : '' }}">
+                <a href="#" class="menu-toggle nav-link has-dropdown">
+                    <i data-feather="shopping-cart"></i>
+                    <span>Orders</span>
+                </a>
+
+                <ul class="dropdown-menu" style="{{ $ordersActive ? 'display:block;' : '' }}">
+                    <li class="{{ request()->routeIs('orders.index') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('orders.index') }}">All Orders</a>
+                    </li>
+                </ul>
+            </li>
 
 
         </ul>
