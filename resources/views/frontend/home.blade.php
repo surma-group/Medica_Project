@@ -1,203 +1,213 @@
 @extends('layouts.website')
 
-@section('title', 'Home')
+@section('title', 'Home - Medica')
 
 @section('content')
 
-<!-- Hero Section Begin -->
-<section class="hero">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-3">
-                <div class="hero__categories">
-                    <div class="hero__categories__all">
-                        <i class="fa fa-bars"></i>
-                        <span>All Brands</span>
-                    </div>
-                    <ul>
-                        @foreach ($brands as $brand)
-                            <li><a href="#">{{ $brand->name }}</a></li>
-                        @endforeach
-                    </ul>
+<!-- Hero Start -->
+<div class="container-fluid py-5 mb-5 hero-header">
+    <div class="container py-5">
+        <div class="row g-5 align-items-center">
+
+            {{-- Left Content --}}
+            <div class="col-md-12 col-lg-7">
+                <h4 class="mb-3 text-secondary">100% Organic Foods</h4>
+                <h1 class="mb-5 display-3 text-primary">Organic Veggies & Fruits Foods</h1>
+
+                <div class="position-relative mx-auto">
+                    <input class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="text" placeholder="Search">
+                    <button type="submit"
+                        class="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
+                        style="top: 0; right: 25%;">
+                        Submit Now
+                    </button>
                 </div>
             </div>
 
-            <div class="col-lg-9">
-                <div class="hero__search">
-                    <div class="hero__search__form">
-                        <form action="#">
-                            <input type="text" placeholder="What do you need?">
-                            <button type="submit" class="site-btn">SEARCH</button>
-                        </form>
-                    </div>
+            {{-- Slider --}}
+            <div class="col-md-12 col-lg-5">
+                <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">
+                    <div class="carousel-inner">
 
-                    
-
-                    <div class="hero__search__phone">
-                        <div class="hero__search__phone__icon">
-                            <i class="fa fa-phone"></i>
+                        <div class="carousel-item active rounded">
+                            <img src="{{ asset('website/img/hero-img-1.png') }}" class="img-fluid w-100 h-100 bg-secondary rounded" alt="">
+                            <a href="#" class="btn px-4 py-2 text-white rounded">Fruits</a>
                         </div>
-                        <div class="hero__search__phone__text">
-                            <h5>+880 1312 468813</h5>
-                            <span>support 24/7 time</span>
+
+                        <div class="carousel-item rounded">
+                            <img src="{{ asset('website/img/hero-img-2.jpg') }}" class="img-fluid w-100 h-100 rounded" alt="">
+                            <a href="#" class="btn px-4 py-2 text-white rounded">Vegetables</a>
                         </div>
-                    </div>
-                </div>
 
-                <div class="hero__item set-bg" data-setbg="{{ asset('website/assets/img/hero/banner.jpg') }}">
-                    <div class="hero__text">
-                        <span>FRUIT FRESH</span>
-                        <h2>Vegetable <br>100% Organic</h2>
-                        <p>Free Pickup and Delivery Available</p>
-                        <a href="#" class="primary-btn">SHOP NOW</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<!-- Hero Section End -->
-
-
-<!-- Categories Section Begin -->
-<section class="categories">
-    <div class="container">
-        <div class="row">
-            <div class="categories__slider owl-carousel">
-
-                <div class="col-lg-3">
-                    <div class="categories__item set-bg" data-setbg="{{ asset('website/assets/img/categories/cat-1.jpg') }}">
-                        <h5><a href="#">Fresh Fruit</a></h5>
-                    </div>
-                </div>
-
-                <div class="col-lg-3">
-                    <div class="categories__item set-bg" data-setbg="{{ asset('website/assets/img/categories/cat-2.jpg') }}">
-                        <h5><a href="#">Dried Fruit</a></h5>
-                    </div>
-                </div>
-
-                <div class="col-lg-3">
-                    <div class="categories__item set-bg" data-setbg="{{ asset('website/assets/img/categories/cat-3.jpg') }}">
-                        <h5><a href="#">Vegetables</a></h5>
-                    </div>
-                </div>
-
-                <div class="col-lg-3">
-                    <div class="categories__item set-bg" data-setbg="{{ asset('website/assets/img/categories/cat-4.jpg') }}">
-                        <h5><a href="#">Drink Fruits</a></h5>
-                    </div>
-                </div>
-
-                <div class="col-lg-3">
-                    <div class="categories__item set-bg" data-setbg="{{ asset('website/assets/img/categories/cat-5.jpg') }}">
-                        <h5><a href="#">Fresh Vegetables</a></h5>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</section>
-<!-- Categories Section End -->
-
-
-<!-- Featured Section Begin -->
-<section class="featured spad">
-    <div class="container">
-
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="section-title">
-                    <h2>Featured Product</h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="featured__item">
-                    <div class="featured__item__pic set-bg"
-                        data-setbg="{{ asset('website/assets/img/featured/feature-1.jpg') }}">
-                        <ul class="featured__item__pic__hover">
-                            <li><a href="#"><i class="fa fa-heart"></i></a></li>
-                            <li><a href="#"><i class="fa fa-retweet"></i></a></li>
-                            <li><a href="#"><i class="fa fa-shopping-cart"></i></a></li>
-                        </ul>
                     </div>
 
-                    <div class="featured__item__text">
-                        <h6><a href="#">Crab Pool Security</a></h6>
-                        <h5>$30.00</h5>
-                    </div>
-                </div>
-            </div>
+                    <button class="carousel-control-prev" type="button"
+                        data-bs-target="#carouselId" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
 
-        </div>
+                    <button class="carousel-control-next" type="button"
+                        data-bs-target="#carouselId" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
 
-    </div>
-</section>
-<!-- Featured Section End -->
-
-
-<!-- Banner Begin -->
-<div class="banner">
-    <div class="container">
-        <div class="row">
-
-            <div class="col-lg-6 col-md-6 col-sm-6">
-                <div class="banner__pic">
-                    <img src="{{ asset('website/assets/img/banner/banner-1.jpg') }}" alt="">
-                </div>
-            </div>
-
-            <div class="col-lg-6 col-md-6 col-sm-6">
-                <div class="banner__pic">
-                    <img src="{{ asset('website/assets/img/banner/banner-2.jpg') }}" alt="">
                 </div>
             </div>
 
         </div>
     </div>
 </div>
-<!-- Banner End -->
+<!-- Hero End -->
 
 
-<!-- Blog Section Begin -->
-<section class="from-blog spad">
-    <div class="container">
+<!-- Vesitable Shop Start-->
+<div class="container-fluid vesitable py-5">
+    <div class="container py-5">
+        <h1 class="mb-0">Products</h1>
 
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="section-title from-blog__title">
-                    <h2>From The Blog</h2>
+        <div class="owl-carousel vegetable-carousel justify-content-center">
+
+            @foreach($products as $product)
+
+            <div class="border border-primary rounded position-relative vesitable-item">
+
+                {{-- IMAGE --}}
+                <div class="vesitable-img" style="height: 220px; overflow: hidden;">
+                    <img
+                        src="{{ $product->image 
+                ? asset('storage/'.$product->image) 
+                : asset('website/img/product.jpg') }}"
+                        class="img-fluid w-100 h-100"
+                        style="object-fit: cover;"
+                        alt="{{ $product->name }}">
+                </div>
+
+                <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
+                    style="top:10px; right:10px;">
+                    {{ $product->category->name ?? 'Product' }}
+                </div>
+
+                <div class="p-4 rounded-bottom">
+                    <h4>{{ $product->name }}</h4>
+
+                    <p>{{ $product->strength }}</p>
+
+                    <div class="d-flex justify-content-between">
+                        <p class="fw-bold">${{ $product->price }}</p>
+
+                        <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                            @csrf
+
+                            <button type="submit" class="btn border rounded-pill text-primary">
+                                Add to cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+            @endforeach
+
+        </div>
+        {{-- VIEW ALL BUTTON --}}
+        <div class="text-center mt-4">
+            <a href="{{ route('shop') }}"
+                class="btn btn-primary rounded-pill px-5 py-2">
+                View All Products
+            </a>
+        </div>
+    </div>
+</div>
+<!-- Vesitable Shop End-->
+
+
+<!-- Features Start -->
+<div class="container-fluid featurs py-5">
+    <div class="container py-5">
+        <div class="row g-4">
+
+            <div class="col-md-6 col-lg-3">
+                <div class="featurs-item text-center rounded bg-light p-4">
+                    <div class="featurs-icon btn-square rounded-circle bg-secondary mb-5 mx-auto">
+                        <i class="fas fa-car-side fa-3x text-white"></i>
+                    </div>
+                    <h5>Free Shipping</h5>
+                    <p class="mb-0">Free on order over $300</p>
                 </div>
             </div>
-        </div>
 
-        <div class="row">
+            <div class="col-md-6 col-lg-3">
+                <div class="featurs-item text-center rounded bg-light p-4">
+                    <div class="featurs-icon btn-square rounded-circle bg-secondary mb-5 mx-auto">
+                        <i class="fas fa-user-shield fa-3x text-white"></i>
+                    </div>
+                    <h5>Security Payment</h5>
+                    <p class="mb-0">100% security payment</p>
+                </div>
+            </div>
 
-            <div class="col-lg-4 col-md-4 col-sm-6">
-                <div class="blog__item">
-                    <div class="blog__item__pic">
-                        <img src="{{ asset('website/assets/img/blog/blog-1.jpg') }}" alt="">
+            <div class="col-md-6 col-lg-3">
+                <div class="featurs-item text-center rounded bg-light p-4">
+                    <div class="featurs-icon btn-square rounded-circle bg-secondary mb-5 mx-auto">
+                        <i class="fas fa-exchange-alt fa-3x text-white"></i>
                     </div>
-                    <div class="blog__item__text">
-                        <ul>
-                            <li><i class="fa fa-calendar-o"></i> May 4,2019</li>
-                            <li><i class="fa fa-comment-o"></i> 5</li>
-                        </ul>
-                        <h5><a href="#">Cooking tips make cooking simple</a></h5>
-                        <p>Sed quia non numquam modi tempora indunt ut labore.</p>
+                    <h5>30 Day Return</h5>
+                    <p class="mb-0">30 day money guarantee</p>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="featurs-item text-center rounded bg-light p-4">
+                    <div class="featurs-icon btn-square rounded-circle bg-secondary mb-5 mx-auto">
+                        <i class="fa fa-phone-alt fa-3x text-white"></i>
                     </div>
+                    <h5>24/7 Support</h5>
+                    <p class="mb-0">Support every time fast</p>
                 </div>
             </div>
 
         </div>
+    </div>
+</div>
+<!-- Features End -->
+
+<!-- Best Seller Start -->
+<div class="container-fluid py-5">
+    <div class="container py-5">
+        <h1 class="text-center mb-5">Bestseller Products</h1>
+
+        <div class="row g-4">
+
+            @for($i=1; $i<=6; $i++)
+                <div class="col-lg-6 col-xl-4">
+                <div class="p-4 rounded bg-light">
+                    <div class="row align-items-center">
+
+                        <div class="col-6">
+                            <img src="{{ asset('website/img/best-product-'.$i.'.jpg') }}"
+                                class="img-fluid rounded-circle w-100">
+                        </div>
+
+                        <div class="col-6">
+                            <h5>Organic Tomato</h5>
+                            <div class="mb-2 text-primary">
+                                ★★★★☆
+                            </div>
+                            <h4>$3.12</h4>
+                            <a href="#" class="btn border rounded-pill text-primary">
+                                Add to cart
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+        </div>
+        @endfor
 
     </div>
-</section>
-<!-- Blog Section End -->
+</div>
+</div>
+<!-- Best Seller End -->
 
-@endsection 
+@endsection

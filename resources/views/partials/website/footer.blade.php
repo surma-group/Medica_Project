@@ -1,69 +1,124 @@
-<footer class="footer spad">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-3 col-md-6 col-sm-6">
-                <div class="footer__about">
-                    <div class="footer__about__logo">
-                        <a href="./index.html"><img src="img/logo.png" alt=""></a>
-                    </div>
-                    <ul>
-                        <li>Address: 60-49 Road 11378 New York</li>
-                        <li>Phone: +65 11.188.888</li>
-                        <li>Email: hello@colorlib.com</li>
-                    </ul>
+<!-- Footer Start -->
+<div class="container-fluid bg-dark text-white-50 footer pt-5 mt-5">
+    <div class="container py-5">
+
+        {{-- Top Footer --}}
+        <div class="pb-4 mb-4" style="border-bottom: 1px solid rgba(226, 175, 24, 0.5);">
+            <div class="row g-4">
+
+                {{-- Logo --}}
+                <div class="col-lg-3">
+                    <a href="{{ url('/') }}">
+                        <h1 class="text-primary mb-0">Medica</h1>
+                        <p class="text-secondary mb-0">Fresh products</p>
+                    </a>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 col-sm-6 offset-lg-1">
-                <div class="footer__widget">
-                    <h6>Useful Links</h6>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">About Our Shop</a></li>
-                        <li><a href="#">Secure Shopping</a></li>
-                        <li><a href="#">Delivery infomation</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Our Sitemap</a></li>
-                    </ul>
-                    <ul>
-                        <li><a href="#">Who We Are</a></li>
-                        <li><a href="#">Our Services</a></li>
-                        <li><a href="#">Projects</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Innovation</a></li>
-                        <li><a href="#">Testimonials</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-12">
-                <div class="footer__widget">
-                    <h6>Join Our Newsletter Now</h6>
-                    <p>Get E-mail updates about our latest shop and special offers.</p>
-                    <form action="#">
-                        <input type="text" placeholder="Enter your mail">
-                        <button type="submit" class="site-btn">Subscribe</button>
-                    </form>
-                    <div class="footer__widget__social">
-                        <a href="#"><i class="fa fa-facebook"></i></a>
-                        <a href="#"><i class="fa fa-instagram"></i></a>
-                        <a href="#"><i class="fa fa-twitter"></i></a>
-                        <a href="#"><i class="fa fa-pinterest"></i></a>
+
+                {{-- Newsletter --}}
+                <div class="col-lg-6">
+                    <div class="position-relative mx-auto">
+                        <input class="form-control border-0 w-100 py-3 px-4 rounded-pill"
+                               type="email" placeholder="Your Email">
+                        <button type="submit"
+                                class="btn btn-primary border-0 py-3 px-4 position-absolute rounded-pill text-white"
+                                style="top: 0; right: 0;">
+                            Subscribe Now
+                        </button>
                     </div>
                 </div>
+
+                {{-- Social --}}
+                <div class="col-lg-3">
+                    <div class="d-flex justify-content-end pt-3">
+                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href="#">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href="#">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a class="btn btn-outline-secondary me-2 btn-md-square rounded-circle" href="#">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a class="btn btn-outline-secondary btn-md-square rounded-circle" href="#">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="footer__copyright">
-                    <div class="footer__copyright__text">
-                        <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                            Copyright &copy;<script>
-                                document.write(new Date().getFullYear());
-                            </script> All rights reserved | This template is made with <i class="fa fa-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
-                    </div>
-                    <div class="footer__copyright__payment"><img src="img/payment-item.png" alt=""></div>
+
+        {{-- Main Footer --}}
+        <div class="row g-5">
+
+            {{-- About --}}
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-item">
+                    <h4 class="text-light mb-3">Why People Like us!</h4>
+                    <p class="mb-4">
+                        We provide fresh organic products with best quality and fast delivery.
+                    </p>
+                    <a href="#" class="btn border-secondary py-2 px-4 rounded-pill text-primary">
+                        Read More
+                    </a>
                 </div>
             </div>
+
+            {{-- Links --}}
+            <div class="col-lg-3 col-md-6">
+                <div class="d-flex flex-column text-start footer-item">
+                    <h4 class="text-light mb-3">Shop Info</h4>
+                    <a class="btn-link" href="#">About Us</a>
+                    <a class="btn-link" href="#">Contact Us</a>
+                    <a class="btn-link" href="#">Privacy Policy</a>
+                    <a class="btn-link" href="#">Terms & Condition</a>
+                    <a class="btn-link" href="#">Return Policy</a>
+                </div>
+            </div>
+
+            {{-- Account --}}
+            <div class="col-lg-3 col-md-6">
+                <div class="d-flex flex-column text-start footer-item">
+                    <h4 class="text-light mb-3">Account</h4>
+                    <a class="btn-link" href="#">My Account</a>
+                    <a class="btn-link" href="#">Cart</a>
+                    <a class="btn-link" href="#">Wishlist</a>
+                    <a class="btn-link" href="#">Order History</a>
+                </div>
+            </div>
+
+            {{-- Contact --}}
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-item">
+                    <h4 class="text-light mb-3">Contact</h4>
+                    <p>Address: Dhaka, Bangladesh</p>
+                    <p>Email: info@medica.com</p>
+                    <p>Phone: +880 1234-567890</p>
+
+                    <img src="{{ asset('website/img/payment.png') }}" class="img-fluid" alt="payment">
+                </div>
+            </div>
+
         </div>
     </div>
-</footer>
+</div>
+
+<!-- Copyright -->
+<div class="container-fluid copyright bg-dark py-4">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                <span class="text-light">
+                    © {{ date('Y') }} Medica. All rights reserved.
+                </span>
+            </div>
+
+            <div class="col-md-6 my-auto text-center text-md-end text-white">
+                Developed by Medica Team
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Footer End -->

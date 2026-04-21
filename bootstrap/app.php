@@ -11,6 +11,17 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
+        then: function () {
+            // Employee Routes (Prefix: employee)
+            Route::middleware('web')
+                ->prefix('employee')
+                ->group(base_path('routes/users.php'));
+
+            // Admin Routes (Prefix: em_admin)
+            Route::middleware('web')
+                ->prefix('em_admin')
+                ->group(base_path('routes/admin.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
         // Register your 'admin' alias here

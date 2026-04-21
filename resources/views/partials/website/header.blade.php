@@ -1,75 +1,88 @@
-<header class="header">
-    <div class="header__top">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6 col-md-6">
-                    <div class="header__top__left">
-                        <ul>
-                            <li><i class="fa fa-envelope"></i> info@medica2020.com</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-6 col-md-6">
-                    <div class="header__top__right">
-                        <div class="header__top__right__social">
-                            <a href="#"><i class="fa fa-facebook"></i></a>
-                            <a href="#"><i class="fa fa-linkedin"></i></a>
-                        </div>
-                        <div class="header__top__right__language">
-                            <img src="{{ asset('website/assets/img/language.png') }}" alt="">
-                            <div>English</div>
-                            <span class="arrow_carrot-down"></span>
-                            <ul>
-                                <li><a href="#">English</a></li>
-                            </ul>
-                        </div>
-                        <div class="header__top__right__auth">
-                            <a href="#"><i class="fa fa-user"></i> Login</a>
-                        </div>
-                    </div>
-                </div>
+<!-- Topbar Start -->
+<div class="container-fluid fixed-top">
+    <div class="container topbar bg-primary d-none d-lg-block">
+        <div class="d-flex justify-content-between">
+            <div class="top-info ps-2">
+                <small class="me-3">
+                    <i class="fas fa-envelope me-2 text-secondary"></i>
+                    <a href="#" class="text-white">info@medica2020.com</a>
+                </small>
+            </div>
+            <div class="top-link pe-2">
+                <a href="#" class="text-white">
+                    <small class="text-white mx-2">Privacy Policy</small> /
+                </a>
+                <a href="#" class="text-white">
+                    <small class="text-white mx-2">Terms of Use</small>
+                </a>
             </div>
         </div>
     </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-3">
-                <div class="header__logo">
-                    <a href="{{ url('/') }}">
-                        <img src="{{ asset('website/assets/img/logo.png') }}" alt="Logo">
+
+    <!-- Navbar Start -->
+    <div class="container px-0">
+        <nav class="navbar navbar-light bg-white navbar-expand-xl">
+
+            {{-- Logo --}}
+            <a href="{{ url('/') }}" class="navbar-brand">
+                <img src="{{ asset('website/img/logo.png') }}"
+                    alt="Medica Logo"
+                    class="img-fluid"
+                    style="max-height: 140px; width: auto;">
+            </a>
+
+            {{-- Mobile Toggle --}}
+            <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="fa fa-bars text-primary"></span>
+            </button>
+
+            {{-- Menu --}}
+            <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
+                <div class="navbar-nav mx-auto">
+                    <a href="{{ url('/') }}" class="nav-item nav-link active">Home</a>
+
+                    <a href="{{ route('shop') }}" class="nav-item nav-link">Shop</a>
+                    <a href="{{ route('login') }}" class="nav-item nav-link">Login</a>
+
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            Order
+                        </a>
+                        <div class="dropdown-menu m-0 bg-secondary rounded-0">
+                            <a href="#" class="dropdown-item">Order</a>
+                            <a href="{{ route('order.request') }}" class="dropdown-item">Order Request</a>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('contact') }}" class="nav-item nav-link">Contact</a>
+                </div>
+
+                {{-- Right Icons --}}
+                <div class="d-flex m-3 me-0">
+
+                    {{-- Search --}}
+                    <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4"
+                        data-bs-toggle="modal" data-bs-target="#searchModal">
+                        <i class="fas fa-search text-primary"></i>
+                    </button>
+
+                    {{-- Cart --}}
+                    <a href="{{ route('cart.index') }}" class="position-relative me-4 my-auto">
+                        <i class="fa fa-shopping-bag fa-2x"></i>
+                        <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
+                            style="top: -5px; left: 15px; height: 20px; min-width: 20px;">
+                            {{ count(session('cart', [])) }}
+                        </span>
                     </a>
+
+                    {{-- User --}}
+                    <a href="#" class="my-auto">
+                        <i class="fas fa-user fa-2x"></i>
+                    </a>
+
                 </div>
             </div>
-            <div class="col-lg-6">
-                <nav class="header__menu">
-                    <ul>
-                        <li class="active"><a href="{{ url('/') }}">Home</a></li>
-                        <li><a href="./shop-grid.html">Shop</a></li>
-                        <li><a href="#">Pages</a>
-                            <ul class="header__menu__dropdown">
-                                <li><a href="./shop-details.html">Shop Details</a></li>
-                                <li><a href="./shoping-cart.html">Shoping Cart</a></li>
-                                <li><a href="./checkout.html">Check Out</a></li>
-                                <li><a href="./blog-details.html">Blog Details</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="./blog.html">Blog</a></li>
-                        <li><a href="./contact.html">Contact</a></li>
-                    </ul>
-                </nav>
-            </div>
-            <div class="col-lg-3">
-                <div class="header__cart">
-                    <ul>
-                        <li><a href="#"><i class="fa fa-heart"></i> <span>1</span></a></li>
-                        <li><a href="#"><i class="fa fa-shopping-bag"></i> <span>3</span></a></li>
-                    </ul>
-                    <div class="header__cart__price">item: <span>$150.00</span></div>
-                </div>
-            </div>
-        </div>
-        <div class="humberger__open">
-            <i class="fa fa-bars"></i>
-        </div>
+        </nav>
     </div>
-</header>
+</div>
+<!-- Navbar End -->
