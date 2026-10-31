@@ -40,17 +40,23 @@
                                             class="btn btn-sm btn-primary">
                                             Edit
                                         </a>
-
+                                        @if($unit->id != DEFAULT_UNIT)
                                         <form action="{{ route('unit.destroy', $unit->id) }}"
                                             method="POST"
                                             style="display:inline-block;"
                                             onsubmit="return confirm('Are you sure you want to delete this unit?');">
                                             @csrf
                                             @method('DELETE')
+
                                             <button class="btn btn-sm btn-danger">
                                                 Delete
                                             </button>
                                         </form>
+                                        @else
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            Default
+                                        </button>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty

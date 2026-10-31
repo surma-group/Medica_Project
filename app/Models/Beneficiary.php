@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,8 +10,8 @@ class Beneficiary extends Model
     use HasFactory;
 
     protected $fillable = [
-        'employee_id',
-
+        'reference_id',
+        'reference_type',
         'bank_name',
         'branch_name',
         'account_type',

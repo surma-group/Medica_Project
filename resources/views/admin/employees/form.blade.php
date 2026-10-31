@@ -85,8 +85,10 @@
 
                     <div class="form-group">
                         <label>Joining Date</label>
-                        <input type="date" name="joining_date" class="form-control" value="{{ old('joining_date', isset($employee) ? $employee->joining_date->format('Y-m-d') : '') }}">
-
+                        <input type="date"
+                            name="joining_date"
+                            class="form-control"
+                            value="{{ old('joining_date', optional($employee->joining_date ?? null)->format('Y-m-d')) }}">
                     </div>
                 </div>
                 <div class="col-12 col-md-6">
@@ -343,43 +345,43 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    $('#company_id').on('change', function() {
-        var companyId = $(this).val();
-        var branchSelect = $('#branch_id');
-        branchSelect.html('<option value="">Loading...</option>');
+    $(document).ready(function() {
+        $('#company_id').on('change', function() {
+            var companyId = $(this).val();
+            var branchSelect = $('#branch_id');
+            branchSelect.html('<option value="">Loading...</option>');
 
-        if(companyId) {
-            $.ajax({
-                url: '/em_admin/employees/get-branches/' + companyId,
-                type: 'GET',
-                success: function(data) {
-                    var options = '<option value="">--Select Branch--</option>';
-                    $.each(data, function(index, branch) {
-                        options += '<option value="' + branch.id + '">' + branch.branch_name + '</option>';
-                    });
-                    branchSelect.html(options);
+            if (companyId) {
+                $.ajax({
+                    url: '/em_admin/employees/get-branches/' + companyId,
+                    type: 'GET',
+                    success: function(data) {
+                        var options = '<option value="">--Select Branch--</option>';
+                        $.each(data, function(index, branch) {
+                            options += '<option value="' + branch.id + '">' + branch.branch_name + '</option>';
+                        });
+                        branchSelect.html(options);
 
-                    // Pre-select old branch if editing
-                    var oldBranch = "{{ old('branch_id', $employee->branch_id ?? '') }}";
-                    if(oldBranch) {
-                        branchSelect.val(oldBranch);
+                        // Pre-select old branch if editing
+                        var oldBranch = "{{ old('branch_id', $employee->branch_id ?? '') }}";
+                        if (oldBranch) {
+                            branchSelect.val(oldBranch);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Failed to fetch branches:", error);
+                        branchSelect.html('<option value="">--Select Branch--</option>');
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Failed to fetch branches:", error);
-                    branchSelect.html('<option value="">--Select Branch--</option>');
-                }
-            });
-        } else {
-            branchSelect.html('<option value="">--Select Branch--</option>');
+                });
+            } else {
+                branchSelect.html('<option value="">--Select Branch--</option>');
+            }
+        });
+
+        // Trigger change on page load for edit forms
+        if ($('#company_id').val()) {
+            $('#company_id').trigger('change');
         }
     });
-
-    // Trigger change on page load for edit forms
-    if($('#company_id').val()) {
-        $('#company_id').trigger('change');
-    }
-});
 </script>
 @endpush

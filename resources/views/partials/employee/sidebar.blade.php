@@ -18,24 +18,30 @@
                     <span>Dashboard</span>
                 </a>
             </li>
-            <li class="{{ request()->routeIs('employee.salary') ? 'active' : '' }}">
-                <a href="{{ route('employee.salary') }}" class="nav-link">
-                    <i data-feather="credit-card"></i>
-                    <span>Salary</span>
-                </a>
-            </li>
+
+            {{-- My Accounts --}}
             <li class="{{ request()->routeIs('employee.wallet') ? 'active' : '' }}">
                 <a href="{{ route('employee.wallet') }}" class="nav-link">
                     <i data-feather="package"></i>
                     <span>My Accounts</span>
                 </a>
             </li>
-            <li class="{{ request()->routeIs('employee.holiday.calendar') ? 'active' : '' }}">
-                <a href="{{ route('employee.holiday.calendar') }}" class="nav-link">
-                    <i data-feather="calendar"></i>
-                    <span>Holiday Calendar</span>
+
+            {{-- Marketing Chain --}}
+            <li class="{{ request()->routeIs('employee.marketing.chain') ? 'active' : '' }}">
+                <a href="{{ route('employee.marketing.chain') }}" class="nav-link">
+                    <i data-feather="git-branch"></i>
+                    <span>Marketing Chain</span>
                 </a>
             </li>
+            {{-- Marketing Area Tree --}}
+            <li class="{{ request()->routeIs('employee.marketing.area-tree') ? 'active' : '' }}">
+                <a href="{{ route('employee.marketing.area-tree') }}" class="nav-link">
+                    <i data-feather="git-branch"></i>
+                    <span>Marketing Area</span>
+                </a>
+            </li>
+
         </ul>
     </aside>
 </div>

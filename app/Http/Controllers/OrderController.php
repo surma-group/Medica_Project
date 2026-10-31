@@ -13,9 +13,10 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required',
-            'customer' => 'required',
-            'cart' => 'nullable',
+            'type' => 'required|in:general,prescription',
+            'customer' => 'required|json',
+            'cart' => 'nullable|json',
+            'prescription' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         DB::beginTransaction();
@@ -24,9 +25,10 @@ class OrderController extends Controller
 
             /* ================= DECODE JSON ================= */
             $customerData = json_decode($request->customer, true);
-            $cart = json_decode($request->cart, true);
+            $cart = $request->cart ? json_decode($request->cart, true) : [];
 
-            if (!$customerData['name'] || !$customerData['phone']) {
+            /* ================= BASIC VALIDATION ================= */
+            if (empty($customerData['name']) || empty($customerData['phone'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Name and phone required'
@@ -63,7 +65,14 @@ class OrderController extends Controller
             }
 
             /* ================= ORDER ITEMS ================= */
-            if ($request->type === 'general' && !empty($cart)) {
+            if ($request->type === 'general') {
+
+                if (empty($cart)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cart is empty'
+                    ]);
+                }
 
                 foreach ($cart as $item) {
 
@@ -71,6 +80,7 @@ class OrderController extends Controller
                         'order_request_id' => $order->id,
                         'product_name' => $item['name'],
                         'strength' => $item['strength'] ?? null,
+                        'company' => $item['company'] ?? null, // ✅ NEW FIELD
                         'unit_id' => $item['unit'],
                         'quantity' => $item['qty'],
                     ]);
@@ -91,7 +101,8 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage() // optional (dev mode)
             ]);
         }
     }

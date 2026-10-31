@@ -88,6 +88,15 @@ $subtotal = 0;
                         class="form-control @error('phone') is-invalid @enderror">
                     @error('phone') <small class="text-danger">{{ $message }}</small> @enderror
 
+                    <label class="form-label my-3">Emergency Contact *</label>
+                    <input type="text" name="emergency_contact"
+                        value="{{ old('emergency_contact') }}"
+                        class="form-control @error('emergency_contact') is-invalid @enderror">
+
+                    @error('emergency_contact')
+                    <small class="text-danger">{{ $message }}</small>
+                    @enderror
+
                     <label class="form-label my-3">Email *</label>
                     <input type="email" name="email"
                         value="{{ old('email') }}"
@@ -126,7 +135,7 @@ $subtotal = 0;
                                 <tr>
                                     <td>
                                         <img src="{{ $item['image'] 
-                                            ? asset('storage/'.$item['image']) 
+                                            ? asset('/public/storage/'.$item['image']) 
                                             : asset('website/img/product.jpg') }}"
                                             style="width:70px;height:70px;border-radius:50%;">
                                     </td>

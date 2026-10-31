@@ -95,6 +95,7 @@ class EmployeeController extends Controller
             'name' => $request->full_name,
             'email' => $request->personal_email,
             'password' => Hash::make($request->password),
+            'type' => USER_TYPE_EMPLOYEE,
             'is_admin' => 0
         ]);
 

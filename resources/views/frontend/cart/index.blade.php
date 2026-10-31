@@ -28,6 +28,7 @@
                     <tr>
                         <th>Product</th>
                         <th>Name</th>
+                        <th>Strength</th>
                         <th>Price</th>
                         <th>Quantity</th>
                         <th>Total</th>
@@ -42,12 +43,13 @@
                     @endphp
                     <tr id="row-{{ $id }}">
                         <td>
-                            <img src="{{ $item['image'] ? asset('storage/'.$item['image']) : asset('website/img/product.jpg') }}"
+                            <img src="{{ $item['image'] ? asset('/public/storage/'.$item['image']) : asset('website/img/product.jpg') }}"
                                 style="width:70px;height:70px;object-fit:cover"
                                 class="rounded-circle">
                         </td>
 
                         <td>{{ $item['name'] }}</td>
+                        <td>{{ $item['strength'] }}</td>
 
                         <td>${{ number_format($item['price'], 2) }}</td>
 

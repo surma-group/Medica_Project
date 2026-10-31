@@ -11,7 +11,6 @@ class VoucherEntry extends Model
 
     public function entries()
     {
-        return $this->hasMany(LedgerEntry::class);
+        return $this->hasMany(LedgerEntry::class, 'voucher_id', 'id');
     }
 }
-

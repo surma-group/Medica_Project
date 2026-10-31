@@ -4,10 +4,8 @@
 
 @section('content')
 
-<!-- CSRF -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<!-- PAGE HEADER -->
 <div class="container-fluid page-header py-5"
     style="background: url('{{ asset('website/img/cart-page-header-img.jpg') }}') center/cover no-repeat;">
     <h1 class="text-center text-white display-6">Order Request</h1>
@@ -37,11 +35,16 @@
                     <input type="text" name="name" placeholder="Product name" class="form-control">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <input type="text" name="strength" placeholder="Strength" class="form-control">
                 </div>
 
-                <div class="col-md-3">
+                {{-- NEW COMPANY FIELD --}}
+                <div class="col-md-2">
+                    <input type="text" name="company" placeholder="Company" class="form-control">
+                </div>
+
+                <div class="col-md-2">
                     <select name="unit" class="form-select">
                         <option value="">Select Unit</option>
                         @foreach($units as $unit)
@@ -83,6 +86,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Strength</th>
+                    <th>Company</th>
                     <th>Unit</th>
                     <th>Qty</th>
                     <th></th>
@@ -130,7 +134,7 @@
 
 let cart = [];
 
-/* ================= TYPE TOGGLE ================= */
+/* TYPE TOGGLE */
 function toggleType() {
     let type = document.getElementById('type').value;
 
@@ -141,11 +145,12 @@ function toggleType() {
     document.getElementById('prescriptionCheckout').classList.toggle('d-none', type !== 'prescription');
 }
 
-/* ================= ADD ITEM ================= */
+/* ADD ITEM */
 document.getElementById('addBtn').addEventListener('click', function () {
 
     let name = document.querySelector('input[name="name"]').value.trim();
     let strength = document.querySelector('input[name="strength"]').value.trim();
+    let company = document.querySelector('input[name="company"]').value.trim(); // NEW
     let unit = document.querySelector('select[name="unit"]').value;
     let unitText = document.querySelector('select[name="unit"] option:checked').text;
     let qty = parseInt(document.querySelector('input[name="quantity"]').value);
@@ -155,19 +160,20 @@ document.getElementById('addBtn').addEventListener('click', function () {
         return;
     }
 
-    cart.push({ name, strength, unit, unitText, qty });
+    cart.push({ name, strength, company, unit, unitText, qty });
+
     renderTable();
 
     document.getElementById('orderForm').reset();
     document.querySelector('input[name="quantity"]').value = 1;
 });
 
-/* ================= TABLE ================= */
+/* TABLE */
 function renderTable() {
     let tbody = document.getElementById('tableBody');
 
     if (cart.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No items</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No items</td></tr>`;
         return;
     }
 
@@ -178,6 +184,7 @@ function renderTable() {
         <tr>
             <td>${item.name}</td>
             <td>${item.strength || '-'}</td>
+            <td>${item.company || '-'}</td>
             <td>${item.unitText}</td>
             <td>${item.qty}</td>
             <td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td>
@@ -185,13 +192,13 @@ function renderTable() {
     });
 }
 
-/* ================= REMOVE ================= */
+/* REMOVE */
 function removeItem(index) {
     cart.splice(index, 1);
     renderTable();
 }
 
-/* ================= MODAL ================= */
+/* MODAL */
 document.getElementById('continueBtn').onclick = () => {
     if (cart.length === 0) return alert("Add items first");
     new bootstrap.Modal(document.getElementById('customerModal')).show();
@@ -201,7 +208,7 @@ document.getElementById('continuePrescriptionBtn').onclick = () => {
     new bootstrap.Modal(document.getElementById('customerModal')).show();
 };
 
-/* ================= SUBMIT ================= */
+/* SUBMIT */
 document.getElementById('sendRequestBtn').addEventListener('click', function () {
 
     let type = document.getElementById('type').value;
@@ -222,7 +229,10 @@ document.getElementById('sendRequestBtn').addEventListener('click', function () 
 
     formData.append('type', type);
     formData.append('customer', JSON.stringify(customer));
-    formData.append('cart', JSON.stringify(cart));
+
+    if (type === 'general') {
+        formData.append('cart', JSON.stringify(cart));
+    }
 
     let fileInput = document.querySelector('input[name="prescription"]');
     let description = document.querySelector('textarea[name="description"]').value;
@@ -240,7 +250,8 @@ document.getElementById('sendRequestBtn').addEventListener('click', function () 
     fetch("{{ route('order.request.store') }}", {
         method: "POST",
         headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+            "Accept": "application/json"
         },
         body: formData
     })
@@ -252,6 +263,7 @@ document.getElementById('sendRequestBtn').addEventListener('click', function () 
             cart = [];
             renderTable();
             document.getElementById('orderForm').reset();
+            toggleType();
             bootstrap.Modal.getInstance(document.getElementById('customerModal')).hide();
         }
     })
@@ -259,7 +271,10 @@ document.getElementById('sendRequestBtn').addEventListener('click', function () 
 });
 
 /* INIT */
-document.addEventListener("DOMContentLoaded", toggleType);
+document.addEventListener("DOMContentLoaded", () => {
+    toggleType();
+    renderTable();
+});
 
 </script>
 

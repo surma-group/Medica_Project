@@ -39,22 +39,63 @@
             {{-- Menu --}}
             <div class="collapse navbar-collapse bg-white" id="navbarCollapse">
                 <div class="navbar-nav mx-auto">
-                    <a href="{{ url('/') }}" class="nav-item nav-link active">Home</a>
 
-                    <a href="{{ route('shop') }}" class="nav-item nav-link">Shop</a>
-                    <a href="{{ route('login') }}" class="nav-item nav-link">Login</a>
+                    <a href="{{ url('/') }}"
+                        class="nav-item nav-link {{ request()->is('/') ? 'active' : '' }}">
+                        Home
+                    </a>
 
+                    <a href="{{ route('shop') }}"
+                        class="nav-item nav-link {{ request()->routeIs('shop') ? 'active' : '' }}">
+                        Products
+                    </a>
+
+                    @auth
+                    <a href="{{ route('profile') }}"
+                        class="nav-item nav-link {{ request()->routeIs('profile') ? 'active' : '' }}">
+                        Profile
+                    </a>
+                    @else
+                    <a href="{{ route('login') }}"
+                        class="nav-item nav-link {{ request()->routeIs('login') ? 'active' : '' }}">
+                        Login
+                    </a>
+                    @endauth
+
+                    <a href="{{ route('cart.index') }}"
+                        class="nav-item nav-link position-relative {{ request()->routeIs('cart.*') ? 'active' : '' }}">
+                        Cart
+                        <span class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-dark px-1"
+                            style="top: -5px; right: -10px; height: 18px; min-width: 18px; font-size: 12px;">
+                            {{ count(session('cart', [])) }}
+                        </span>
+                    </a>
+
+                    {{-- Dropdown --}}
                     <div class="nav-item dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <a href="#"
+                            class="nav-link dropdown-toggle {{ request()->routeIs('order.*') ? 'active' : '' }}"
+                            data-bs-toggle="dropdown">
                             Order
                         </a>
+
                         <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                            <a href="#" class="dropdown-item">Order</a>
-                            <a href="{{ route('order.request') }}" class="dropdown-item">Order Request</a>
+                            <a href="#"
+                                class="dropdown-item {{ request()->routeIs('order.index') ? 'active' : '' }}">
+                                Order
+                            </a>
+
+                            <a href="{{ route('order.request') }}"
+                                class="dropdown-item {{ request()->routeIs('order.request') ? 'active' : '' }}">
+                                Order Request
+                            </a>
                         </div>
                     </div>
 
-                    <a href="{{ route('contact') }}" class="nav-item nav-link">Contact</a>
+                    <a href="{{ route('contact') }}"
+                        class="nav-item nav-link {{ request()->routeIs('contact') ? 'active' : '' }}">
+                        Contact
+                    </a>
                 </div>
 
                 {{-- Right Icons --}}
@@ -76,9 +117,15 @@
                     </a>
 
                     {{-- User --}}
-                    <a href="#" class="my-auto">
+                    @auth
+                    <a href="{{ route('profile') }}" class="my-auto">
                         <i class="fas fa-user fa-2x"></i>
                     </a>
+                    @else
+                    <a href="{{ route('login') }}" class="my-auto">
+                        <i class="fas fa-user fa-2x"></i>
+                    </a>
+                    @endauth
 
                 </div>
             </div>

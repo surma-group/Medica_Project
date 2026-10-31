@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EmployeeMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,30 +13,40 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
         then: function () {
-            // Employee Routes (Prefix: employee)
+
+            // Partner Routes (Prefix: partner)
             Route::middleware('web')
-                ->prefix('employee')
-                ->group(base_path('routes/users.php'));
+                ->prefix('partner')
+                ->group(base_path('routes/partner.php'));
 
             // Admin Routes (Prefix: em_admin)
             Route::middleware('web')
                 ->prefix('em_admin')
                 ->group(base_path('routes/admin.php'));
+
+            // Employee Routes
+            Route::middleware('web')
+                ->prefix('employee')
+                ->group(base_path('routes/employee.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Register your 'admin' alias here
+
         $middleware->alias([
             'admin' => AdminMiddleware::class,
+            'employee' => EmployeeMiddleware::class,
         ]);
 
         $middleware->redirectGuestsTo(function ($request) {
-            // If the URL starts with em_admin, redirect to the admin login
+
             if ($request->is('em_admin*')) {
                 return route('admin.login');
             }
 
-            // Default redirection for regular users
+            if ($request->is('partner*')) {
+                return route('login'); // or partner.login if you create separate login
+            }
+
             return route('login');
         });
     })

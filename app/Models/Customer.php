@@ -11,9 +11,12 @@ class Customer extends Model
 
     protected $fillable = [
         'name',
+        'user_id',
+        'ledger_id',
         'first_name',
         'last_name',
         'phone',
+        'emergency_contact',
         'email',
         'address',
         'district_id',
@@ -31,5 +34,16 @@ class Customer extends Model
     public function district()
     {
         return $this->belongsTo(District::class);
+    }
+
+    public function ledger()
+    {
+        return $this->belongsTo(Ledger::class);
+    }
+
+    // optional: user relation
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

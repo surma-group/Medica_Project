@@ -25,7 +25,9 @@
             || request()->routeIs('department.*')
             || request()->routeIs('designation.*')
             || request()->routeIs('branch.*')
-            || request()->routeIs('unit.P*');
+            || request()->routeIs('unit.*')
+            || request()->routeIs('payment-accounts.*')
+            || request()->routeIs('settings.*');
             @endphp
 
             <li class="dropdown {{ $settingsActive ? 'active' : '' }}">
@@ -41,6 +43,11 @@
                     <li class="{{ request()->routeIs('department.*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('department.index') }}">Department</a>
                     </li>
+                    <li class="{{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('settings.index') }}">
+                            System Settings
+                        </a>
+                    </li>
                     <li class="{{ request()->routeIs('designation.*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('designation.index') }}">Designation</a>
                     </li>
@@ -49,6 +56,11 @@
                     </li>
                     <li class="{{ request()->routeIs('unit.*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('unit.index') }}">Unit</a>
+                    </li>
+                    <li class="{{ request()->routeIs('payment-accounts.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('payment-accounts.index') }}">
+                            Payment Accounts
+                        </a>
                     </li>
                 </ul>
             </li>
@@ -114,61 +126,50 @@
                 </ul>
             </li>
 
+
+            {{-- Marketing --}}
             @php
-            $accountsActive = request()->routeIs(
-            'add_money.*',
-            'withdraw_requests.*'
-            );
+            $marketingActive = request()->routeIs('marketing.*');
             @endphp
 
-            <li class="dropdown {{ $accountsActive ? 'active' : '' }}">
+            <li class="dropdown {{ $marketingActive ? 'active' : '' }}">
                 <a href="#" class="menu-toggle nav-link has-dropdown">
-                    <i data-feather="dollar-sign"></i>
-                    <span>Accounts</span>
+                    <i data-feather="git-branch"></i>
+                    <span>Marketing</span>
                 </a>
 
-                <ul class="dropdown-menu" @if($accountsActive) style="display:block;" @endif>
+                <ul class="dropdown-menu" style="{{ $marketingActive ? 'display:block;' : '' }}">
 
-                    <li class="{{ request()->routeIs('add_money.*') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('add_money.index') }}">
-                            Add Money
+                    {{-- Existing Marketing Chain --}}
+                    <li class="{{ request()->routeIs('marketing.chain') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('marketing.chain') }}">
+                            Marketing Chain
                         </a>
                     </li>
 
-                    <li class="{{ request()->routeIs('withdraw_requests.*') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('withdraw_requests.index') }}">
-                            Withdraw Requests
+                    {{-- Commission & Target --}}
+                    <li class="{{ request()->routeIs('marketing.commission.target') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('marketing.commission.target') }}">
+                            Commission & Target
+                        </a>
+                    </li>
+
+                    {{-- Marketing Area --}}
+                    <li class="{{ request()->routeIs('marketing.area') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('marketing.area') }}">
+                            Marketing Area
                         </a>
                     </li>
 
                 </ul>
             </li>
 
-            @php
-            $reportsActive = request()->routeIs('reports.*');
-            @endphp
 
-            <li class="dropdown {{ $reportsActive ? 'active' : '' }}">
-                <a href="#" class="menu-toggle nav-link has-dropdown">
-                    <i data-feather="file-text"></i>
-                    <span>Reports</span>
-                </a>
-
-                <ul class="dropdown-menu" @if($reportsActive) style="display:block;" @endif>
-
-                    <li class="{{ request()->routeIs('reports.cash_flow') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('reports.cash_flow') }}">
-                            Cash Flow
-                        </a>
-                    </li>
-
-                    <!-- You can add more report links here in the future -->
-
-                </ul>
-            </li>
 
             @php
-            $partiesActive = request()->routeIs('suppliers.*');
+            $partiesActive = request()->routeIs('suppliers.*')
+            || request()->routeIs('customers.*')
+            || request()->routeIs('partners.*');
             @endphp
 
             <li class="dropdown {{ $partiesActive ? 'active' : '' }}">
@@ -181,6 +182,22 @@
                     <li class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}">
                         <a class="nav-link" href="{{ route('suppliers.index') }}">Suppliers</a>
                     </li>
+                    <li class="{{ request()->routeIs('customers.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('customers.index') }}">Customers</a>
+                    </li>
+                    <!-- Dealers -->
+                    <li class="{{ request()->routeIs('partners.dealer.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('partners.dealer.index') }}">
+                            Dealers
+                        </a>
+                    </li>
+
+                    <!-- Agents -->
+                    <li class="{{ request()->routeIs('partners.agent.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('partners.agent.index') }}">
+                            Agents
+                        </a>
+                    </li>
                 </ul>
             </li>
 
@@ -188,8 +205,10 @@
             $inventoryActive = request()->routeIs('brands.*')
             || request()->routeIs('categories.*')
             || request()->routeIs('products.*')
+            || request()->routeIs('products.request')
             || request()->routeIs('product_company.*')
-            || request()->routeIs('product_generic.*');
+            || request()->routeIs('product_generic.*')
+            || request()->routeIs('product-stock.*');
             @endphp
 
             <li class="dropdown {{ $inventoryActive ? 'active' : '' }}">
@@ -226,22 +245,147 @@
                             Product
                         </a>
                     </li>
+                    <li class="{{ request()->routeIs('products.request') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ url('em_admin/products/request') }}">
+                            Product Request
+                        </a>
+                    </li>
+                    <li class="{{ request()->routeIs('product-stock.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('product-stock.index') }}">
+                            Product Stock
+                        </a>
+                    </li>
                 </ul>
             </li>
             @php
-            $ordersActive = request()->routeIs('orders.*');
+            $ordersActive =
+            request()->routeIs('orders.*') ||
+            request()->routeIs('order-requests.*') ||
+            request()->routeIs('sales.*') ||
+            request()->routeIs('orders.accepted');
             @endphp
 
             <li class="dropdown {{ $ordersActive ? 'active' : '' }}">
                 <a href="#" class="menu-toggle nav-link has-dropdown">
                     <i data-feather="shopping-cart"></i>
-                    <span>Orders</span>
+                    <span>Orders Management</span>
                 </a>
 
                 <ul class="dropdown-menu" style="{{ $ordersActive ? 'display:block;' : '' }}">
+
                     <li class="{{ request()->routeIs('orders.index') ? 'active' : '' }}">
-                        <a class="nav-link" href="{{ route('orders.index') }}">All Orders</a>
+                        <a class="nav-link" href="{{ route('orders.index') }}">
+                            All Orders
+                        </a>
                     </li>
+
+                    <!-- New Menu -->
+                    <li class="{{ request()->routeIs('order-requests.index') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('order-requests.index') }}">
+                            Order Request
+                        </a>
+                    </li>
+
+                    <!-- NEW: Accepted Orders -->
+                    <li class="{{ request()->routeIs('orders.accepted') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('orders.accepted') }}">
+                            Accepted Orders
+                        </a>
+                    </li>
+
+                    {{-- Sales Menu --}}
+                    <li class="{{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('sales.index') }}">
+                            Sales
+                        </a>
+                    </li>
+
+                </ul>
+            </li>
+
+            @php
+            $purchaseActive =
+            request()->routeIs('purchases.*');
+            @endphp
+
+            <li class="dropdown {{ $purchaseActive ? 'active' : '' }}">
+                <a href="#" class="menu-toggle nav-link has-dropdown">
+                    <i data-feather="truck"></i>
+                    <span>Purchases</span>
+                </a>
+
+                <ul class="dropdown-menu" style="{{ $purchaseActive ? 'display:block;' : '' }}">
+
+                    <li class="{{ request()->routeIs('purchases.index') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('purchases.index') }}">
+                            Purchases
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            @php
+            $accountsActive = request()->routeIs(
+            'add_money.*',
+            'withdraw_requests.*',
+            'add_money_requests.*',
+            'add_employee_balance.*'
+            );
+            @endphp
+
+            <li class="dropdown {{ $accountsActive ? 'active' : '' }}">
+                <a href="#" class="menu-toggle nav-link has-dropdown">
+                    <i data-feather="dollar-sign"></i>
+                    <span>Accounts</span>
+                </a>
+
+                <ul class="dropdown-menu" @if($accountsActive) style="display:block;" @endif>
+
+                    <li class="{{ request()->routeIs('add_money.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('add_money.index') }}">
+                            Add Money
+                        </a>
+                    </li>
+                    <li class="{{ request()->routeIs('add_money_requests.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('add_money_requests.index') }}">
+                            Add Money Requests
+                        </a>
+                    </li>
+                    <li class="{{ request()->routeIs('add_employee_balance.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('add_employee_balance.index') }}">
+                            Add Employee Balance
+                        </a>
+                    </li>
+
+                    <li class="{{ request()->routeIs('withdraw_requests.*') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('withdraw_requests.index') }}">
+                            Withdraw Requests
+                        </a>
+                    </li>
+
+                </ul>
+            </li>
+
+            @php
+            $reportsActive = request()->routeIs('reports.*');
+            @endphp
+
+            <li class="dropdown {{ $reportsActive ? 'active' : '' }}">
+                <a href="#" class="menu-toggle nav-link has-dropdown">
+                    <i data-feather="file-text"></i>
+                    <span>Reports</span>
+                </a>
+
+                <ul class="dropdown-menu" @if($reportsActive) style="display:block;" @endif>
+
+                    <li class="{{ request()->routeIs('reports.cash_flow') ? 'active' : '' }}">
+                        <a class="nav-link" href="{{ route('reports.cash_flow') }}">
+                            Cash Flow
+                        </a>
+                    </li>
+
+                    <!-- You can add more report links here in the future -->
+
                 </ul>
             </li>
 

@@ -48,7 +48,12 @@ class Product extends Model
     // ✅ new
     public function company()
     {
-        return $this->belongsTo(ProductCompany::class);
+        return $this->belongsTo(ProductCompany::class, 'company_id');
+    }
+    //commission
+    public function commissions()
+    {
+        return $this->hasMany(ProductCommission::class);
     }
 
     // ✅ new
@@ -66,5 +71,30 @@ class Product extends Model
     public function secondaryUnit()
     {
         return $this->belongsTo(Unit::class, 'secondary_unit_id');
+    }
+
+    public function prices()
+    {
+        return $this->hasMany(ProductPrice::class);
+    }
+
+    public function priceWithUserType()
+    {
+        return $this->hasMany(ProductPrice::class)->with('userType');
+    }
+
+    public function stock()
+    {
+        return $this->hasOne(ProductStock::class);
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function saleItems()
+    {
+        return $this->hasMany(SaleItem::class);
     }
 }

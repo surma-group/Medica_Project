@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    // Show login form (optional since we use closure route)
+    // Show login form
     public function showLoginForm()
     {
         return view('frontend.login');
@@ -21,31 +21,54 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Only allow employees (is_admin = 0)
-        $credentials = [
-            'email' => $request->email,
-            'password' => $request->password,
-            'is_admin' => 0,
-        ];
+        $credentials = $request->only('email', 'password');
 
         if (Auth::guard('web')->attempt($credentials)) {
+
             $request->session()->regenerate();
 
-            return redirect()->route('employee.dashboard');
+            $user = Auth::guard('web')->user();
+
+            // Customer
+            if ($user->type == USER_TYPE_CUSTOMER) {
+                return redirect()->route('profile');
+            }
+
+            // Dealer / Agent
+            if (
+                $user->type == USER_TYPE_DEALER ||
+                $user->type == USER_TYPE_AGENT
+            ) {
+                return redirect()->route('partner.dashboard');
+            }
+
+            // Employee
+            if ($user->type == USER_TYPE_EMPLOYEE) {
+                return redirect()->route('employee.dashboard');
+            }
+
+            // Other account types are not allowed
+            Auth::guard('web')->logout();
+
+            return back()->withErrors([
+                'email' => 'Account type not allowed.'
+            ])->withInput();
         }
 
-        return back()->withErrors([
-            'email' => 'Invalid credentials or you are not an employee.',
-        ])->withInput();
+        return back()
+            ->withErrors([
+                'email' => 'Invalid credentials.'
+            ])
+            ->withInput();
     }
-
-
 
     // Logout
     public function logout(Request $request)
     {
         if (Auth::guard('web')->check()) {
+
             Auth::guard('web')->logout();
+
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }

@@ -15,6 +15,7 @@ class OrderRequestItem extends Model
         'order_request_id',
         'product_name',
         'strength',
+        'company',
         'unit_id', // ✅ updated
         'quantity',
         // 'status', ❗ optional (recommend remove)

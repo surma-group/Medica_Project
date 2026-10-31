@@ -10,17 +10,25 @@ class CartController extends Controller
 {
     public function add($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with(['prices'])->findOrFail($id);
 
         $cart = session()->get('cart', []);
+
+        // 🔥 CUSTOMER PRICE LOGIC
+        $customerPrice = optional(
+            $product->prices->where('user_type_id', USER_TYPE_CUSTOMER)->first()
+        )->price;
+
+        $finalPrice = $customerPrice ?? $product->price;
 
         if (isset($cart[$id])) {
             $cart[$id]['quantity']++;
         } else {
             $cart[$id] = [
-                "id"=>$product->id,
+                "id" => $product->id,
                 "name" => $product->name,
-                "price" => $product->price,
+                "strength" => $product->strength,
+                "price" => $finalPrice, // 🔥 UPDATED HERE
                 "image" => $product->image,
                 "quantity" => 1
             ];

@@ -9,11 +9,17 @@ use App\Models\Brand;
 use App\Models\ProductGeneric;
 use App\Models\ProductCompany;
 use App\Models\Unit;
+use App\Models\UserType;
+use App\Models\ProductCommission;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
+
 
 class ProductController extends Controller
 {
@@ -23,16 +29,22 @@ class ProductController extends Controller
     {
         if ($request->ajax()) {
 
-            $query = Product::with(['category', 'generic'])
-                ->select('id', 'name', 'barcode', 'category_id', 'generic_id', 'image', 'status')
-                ->latest();
+            $query = Product::with([
+                'category',
+                'generic',
+                'prices.unit',
+                'commissions', // ✅ IMPORTANT ADD
+                'company'
+            ])
+                ->select('products.*')
+                ->where('status', 1);
 
             return DataTables::of($query)
                 ->addIndexColumn()
 
                 ->addColumn('image', function ($row) {
                     if ($row->image) {
-                        return '<img src="' . asset('storage/' . $row->image) . '" width="50" height="50" class="rounded">';
+                        return '<img src="' . asset('public/storage/' . $row->image) . '" width="180" height="130" class="rounded">';
                     }
                     return '<span class="text-muted">No Image</span>';
                 })
@@ -41,8 +53,28 @@ class ProductController extends Controller
                     return $row->category->name ?? '-';
                 })
 
+                ->addColumn('strength', function ($row) {
+                    return $row->strength ?? '-';
+                })
+
                 ->addColumn('generic', function ($row) {
                     return $row->generic->generic_name ?? '-';
+                })
+
+                ->filterColumn('generic', function ($query, $keyword) {
+                    $query->whereHas('generic', function ($q) use ($keyword) {
+                        $q->where('generic_name', 'like', "%{$keyword}%");
+                    });
+                })
+
+                ->addColumn('company', function ($row) {
+                    return $row->company->company_name ?? '-';
+                })
+
+                ->filterColumn('company', function ($query, $keyword) {
+                    $query->whereHas('company', function ($q) use ($keyword) {
+                        $q->where('company_name', 'like', "%{$keyword}%");
+                    });
                 })
 
                 ->addColumn('status', function ($row) {
@@ -52,17 +84,53 @@ class ProductController extends Controller
                 })
 
                 ->addColumn('action', function ($row) {
-                    return '
-                    <a href="' . route('products.edit', $row->id) . '" class="btn btn-sm btn-primary">Edit</a>
 
-                    <form method="POST"
-                          action="' . route('products.destroy', $row->id) . '"
-                          style="display:inline-block"
-                          onsubmit="return confirm(\'Delete this product?\')">
-                        ' . csrf_field() . method_field('DELETE') . '
-                        <button class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                ';
+                    return '
+                <button class="btn btn-sm btn-warning"
+                    data-bs-toggle="modal"
+                    data-bs-target="#setUnitModal"
+                    data-id="' . $row->id . '"
+                    data-name="' . $row->name . '"
+                    data-url="' . route('products.unit.set', $row->id) . '"
+                    data-base="' . ($row->base_unit_id ?? '') . '"
+                    data-secondary="' . ($row->secondary_unit_id ?? '') . '"
+                    data-rate="' . ($row->conversion_rate ?? '') . '">
+                    Set Unit
+                </button>
+
+                <button class="btn btn-sm btn-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#setPriceModal"
+                    data-id="' . $row->id . '"
+                    data-name="' . $row->name . '"
+                    data-url="' . route('products.price.set', $row->id) . '"
+                    data-base-unit="' . ($row->base_unit_id ?? 0) . '"
+                    data-secondary-unit="' . ($row->secondary_unit_id ?? 0) . '"
+                    data-prices="' . htmlspecialchars(json_encode($row->prices ?? []), ENT_QUOTES, 'UTF-8') . '">
+                    Set Price
+                </button>
+
+                <button class="btn btn-sm btn-info"
+                    data-bs-toggle="modal"
+                    data-bs-target="#setCommissionModal"
+                    data-id="' . $row->id . '"
+                    data-name="' . $row->name . '"
+                    data-url="' . route('products.commission.set', $row->id) . '"
+                    data-commissions="' . htmlspecialchars(json_encode($row->commissions ?? []), ENT_QUOTES, 'UTF-8') . '">
+                    Commission
+                </button>
+
+                <a href="' . route('products.edit', $row->id) . '" class="btn btn-sm btn-primary">
+                    Edit
+                </a>
+
+                <form method="POST"
+                    action="' . route('products.destroy', $row->id) . '"
+                    style="display:inline-block"
+                    onsubmit="return confirm(\'Delete this product?\')">
+                    ' . csrf_field() . method_field('DELETE') . '
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                </form>';
                 })
 
                 ->rawColumns(['image', 'status', 'action'])
@@ -70,8 +138,134 @@ class ProductController extends Controller
         }
 
         $units = Unit::where('status', true)->get();
+        $userTypes = UserType::where('status', 1)
+            ->whereNotIn('id', [USER_TYPE_SUPPLIER])
+            ->get();
 
-        return view('admin.products.index', compact('units'));
+        return view('admin.products.index', compact('units', 'userTypes'));
+    }
+
+    public function productRequest(Request $request)
+    {
+        if ($request->ajax()) {
+
+            $query = Product::with([
+                'category',
+                'generic',
+                'prices',
+                'commissions',
+                'company'
+            ])
+                ->select('products.*')
+                ->where('status', 0)
+                ->latest();
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+
+                ->addColumn('image', function ($row) {
+                    if ($row->image) {
+                        return '<img src="' . asset('public/storage/' . $row->image) . '" width="180" height="130" class="rounded">';
+                    }
+
+                    return '<span class="text-muted">No Image</span>';
+                })
+
+                ->addColumn('category', function ($row) {
+                    return $row->category->name ?? '-';
+                })
+
+                ->addColumn('strength', function ($row) {
+                    return $row->strength ?? '-';
+                })
+
+                ->addColumn('generic', function ($row) {
+                    return $row->generic->generic_name ?? '-';
+                })
+
+                ->filterColumn('generic', function ($query, $keyword) {
+                    $query->whereHas('generic', function ($q) use ($keyword) {
+                        $q->where('generic_name', 'like', "%{$keyword}%");
+                    });
+                })
+
+                ->addColumn('company', function ($row) {
+                    return $row->company?->company_name ?? '-';
+                })
+
+                ->filterColumn('company', function ($query, $keyword) {
+                    $query->whereHas('company', function ($q) use ($keyword) {
+                        $q->where('company_name', 'like', "%{$keyword}%");
+                    });
+                })
+
+                ->addColumn('status', function ($row) {
+                    return '<span class="badge bg-warning">Pending</span>';
+                })
+
+                ->addColumn('action', function ($row) {
+
+                    return '
+                <button class="btn btn-sm btn-warning"
+                    data-bs-toggle="modal"
+                    data-bs-target="#setUnitModal"
+                    data-id="' . $row->id . '"
+                    data-name="' . $row->name . '"
+                    data-url="' . route('products.unit.set', $row->id) . '"
+                    data-base="' . ($row->base_unit_id ?? '') . '"
+                    data-secondary="' . ($row->secondary_unit_id ?? '') . '"
+                    data-rate="' . ($row->conversion_rate ?? '') . '">
+                    Set Unit
+                </button>
+
+                <button class="btn btn-sm btn-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#setPriceModal"
+                    data-id="' . $row->id . '"
+                    data-name="' . $row->name . '"
+                    data-url="' . route('products.price.set', $row->id) . '"
+                    data-prices="' . htmlspecialchars(json_encode($row->prices ?? []), ENT_QUOTES, 'UTF-8') . '">
+                    Set Price
+                </button>
+
+                <button class="btn btn-sm btn-info"
+                    data-bs-toggle="modal"
+                    data-bs-target="#setCommissionModal"
+                    data-id="' . $row->id . '"
+                    data-name="' . $row->name . '"
+                    data-url="' . route('products.commission.set', $row->id) . '"
+                    data-commissions="' . htmlspecialchars(json_encode($row->commissions ?? []), ENT_QUOTES, 'UTF-8') . '">
+                    Commission
+                </button>
+
+                <a href="' . route('products.edit', $row->id) . '?from=request"
+                    class="btn btn-sm btn-primary">
+                    Edit
+                </a>
+
+                <form method="POST"
+                    action="' . route('products.destroy', $row->id) . '"
+                    style="display:inline-block"
+                    onsubmit="return confirm(\'Delete this product?\')">
+
+                    ' . csrf_field() . method_field('DELETE') . '
+
+                    <button class="btn btn-sm btn-danger">
+                        Delete
+                    </button>
+                </form>';
+                })
+
+                ->rawColumns(['image', 'status', 'action'])
+                ->make(true);
+        }
+
+        $units = Unit::where('status', true)->get();
+        $userTypes = UserType::where('status', 1)
+            ->whereNotIn('id', [USER_TYPE_SUPPLIER])
+            ->get();
+
+        return view('admin.products.request', compact('units', 'userTypes'));
     }
 
     public function create()
@@ -92,6 +286,7 @@ class ProductController extends Controller
         ));
     }
 
+
     public function store(Request $request)
     {
         $request->validate([
@@ -100,11 +295,19 @@ class ProductController extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'company_id' => 'nullable|exists:product_companies,id',
             'generic_id' => 'nullable|exists:product_generics,id',
-            'name' => 'required|string|max:255',
+
+            // Name unique করা হলো
+            'name' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('products', 'name'),
+            ],
+
+            'image' => 'nullable|image|max:2048|required_without:name',
+
             'strength' => 'nullable|string|max:100',
             'manufacturer_name' => 'nullable|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
             'status' => 'required|in:0,1',
         ]);
 
@@ -117,12 +320,48 @@ class ProductController extends Controller
             'name',
             'strength',
             'manufacturer_name',
-            'price',
             'status',
         ]);
 
+        /**
+         * IMAGE UPLOAD + AUTO NAME
+         */
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+
+            $file = $request->file('image');
+
+            $data['image'] = $file->store('products', 'public');
+
+            // যদি name না দেওয়া হয় তাহলে image থেকে বানাবে
+            if (empty($request->name)) {
+
+                $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+
+                $cleanName = Str::of($filename)
+                    ->replace(['_', '-'], ' ')
+                    ->squish()
+                    ->title();
+
+                $data['name'] = $cleanName;
+            }
+        }
+
+        /**
+         * যদি user name দেয় তাহলে clean করা
+         */
+        if (!empty($request->name)) {
+            $data['name'] = Str::of($request->name)
+                ->squish()
+                ->title();
+        }
+
+        /**
+         * EXTRA SAFETY: Duplicate Check (Optional but Strong)
+         */
+        if (Product::where('name', $data['name'])->exists()) {
+            return back()
+                ->withErrors(['name' => 'This product name already exists.'])
+                ->withInput();
         }
 
         Product::create($data);
@@ -155,10 +394,11 @@ class ProductController extends Controller
             'brand_id' => 'nullable|exists:brands,id',
             'company_id' => 'nullable|exists:product_companies,id',
             'generic_id' => 'nullable|exists:product_generics,id',
+
             'name' => 'required|string|max:255',
             'strength' => 'nullable|string|max:100',
+
             'manufacturer_name' => 'nullable|string|max:255',
-            'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|max:2048',
             'status' => 'required|in:0,1',
         ]);
@@ -172,24 +412,65 @@ class ProductController extends Controller
             'name',
             'strength',
             'manufacturer_name',
-            'price',
             'status',
         ]);
 
+        /**
+         * Clean Name
+         */
+        $data['name'] = Str::of($request->name)
+            ->squish()
+            ->title();
+
+        /**
+         * Duplicate Check
+         * Same Name + Same Strength not allowed
+         */
+        $exists = Product::where('name', $data['name'])
+            ->where('strength', $request->strength)
+            ->where('id', '!=', $product->id)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withErrors([
+                    'name' => 'This product name and strength already exists.'
+                ])
+                ->withInput();
+        }
+
+        /**
+         * Image Update
+         */
         if ($request->hasFile('image')) {
 
-            if ($product->image && \Storage::disk('public')->exists($product->image)) {
+            if (
+                $product->image &&
+                \Storage::disk('public')->exists($product->image)
+            ) {
                 \Storage::disk('public')->delete($product->image);
             }
 
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $data['image'] = $request->file('image')
+                ->store('products', 'public');
         }
 
         $product->update($data);
 
-        return redirect()->route('products.index')
+        /**
+         * Redirect Back To Previous Page
+         */
+        if ($request->has('from') && $request->from === 'request') {
+            return redirect()
+                ->route('products.request')
+                ->with('success', 'Product updated successfully.');
+        }
+
+        return redirect()
+            ->route('products.index')
             ->with('success', 'Product updated successfully.');
     }
+
 
     public function destroy(Product $product)
     {
@@ -374,5 +655,73 @@ class ProductController extends Controller
         ]);
 
         return back()->with('success', 'Unit updated successfully');
+    }
+
+    public function setPrice(Request $request, Product $product)
+    {
+        $request->validate([
+            'user_type_id' => ['required', 'array'],
+            'user_type_id.*' => ['exists:user_type,id'],
+
+            'unit_id' => ['required', 'array'],
+            'unit_id.*' => ['exists:units,id'],
+
+            'price' => ['required', 'array'],
+            'price.*' => ['nullable', 'numeric', 'min:0'],
+
+            'currency' => ['required', 'in:1,2,3'],
+        ]);
+
+        // 🔥 STEP 1: DELETE OLD PRICES (IMPORTANT)
+        \App\Models\ProductPrice::where('product_id', $product->id)->delete();
+
+        // 🔥 STEP 2: INSERT NEW PRICES
+        foreach ($request->user_type_id as $index => $userTypeId) {
+
+            $unitId = $request->unit_id[$index] ?? null;
+            $price  = $request->price[$index] ?? null;
+
+            if (!$unitId || $price === null || $price === '') {
+                continue;
+            }
+
+            \App\Models\ProductPrice::create([
+                'product_id'    => $product->id,
+                'user_type_id'  => $userTypeId,
+                'unit_id'       => $unitId,
+                'price'         => $price,
+                'currency'      => $request->currency,
+                'status'        => 1,
+            ]);
+        }
+
+        return back()->with('success', 'Prices updated successfully');
+    }
+
+    public function setCommission(Request $request, $productId)
+    {
+        $product = Product::findOrFail($productId);
+
+        foreach ($request->user_type_id as $key => $userTypeId) {
+
+            ProductCommission::updateOrCreate(
+                [
+                    'product_id' => $product->id,
+                    'user_type_id' => $userTypeId,
+                ],
+                [
+                    'commission' => $request->commission[$key] ?? 0,
+
+                    // ⚠️ IMPORTANT: per-user-type commission type
+                    'commission_type' => $request->commission_type[$key] ?? COMMISSION_TYPE_FLAT,
+
+                    'status' => 1,
+                ]
+            );
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Commission updated successfully');
     }
 }

@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class WithdrawRequest extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'employee_id',
+        'reference_id',
+        'reference_type',
         'method',
         'amount',
         'data',
@@ -24,32 +26,41 @@ class WithdrawRequest extends Model
         'created_by',
     ];
 
-
     protected $casts = [
         'data' => 'array',
+        'amount' => 'decimal:2',
         'approve_at' => 'datetime',
         'paid_at' => 'datetime',
     ];
 
-    // Relations
-    public function employee()
+    // Employee or Partner relation
+    public function reference(): MorphTo
     {
-        return $this->belongsTo(Employee::class, 'employee_id');
+        return $this->morphTo();
     }
 
+    // Approver
     public function approver()
     {
         return $this->belongsTo(User::class, 'approve_by');
     }
 
+    // Creator
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function statusLabel()
+    // Payment handler
+    public function payer()
     {
-        return match ($this->status) {
+        return $this->belongsTo(User::class, 'paid_by');
+    }
+
+    // Status label
+    public function statusLabel(): string
+    {
+        return match ((int) $this->status) {
             0 => 'Pending',
             1 => 'Approved',
             2 => 'Rejected',

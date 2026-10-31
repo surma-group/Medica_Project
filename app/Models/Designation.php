@@ -15,5 +15,16 @@ class Designation extends Model
         'description',
         'status',
         'created_by',
+        'parent_id',
     ];
+
+    public function parent()
+    {
+        return $this->belongsTo(Designation::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Designation::class, 'parent_id');
+    }
 }

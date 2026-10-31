@@ -13,13 +13,41 @@ use App\Models\Designation;
 use App\Models\EmploymentType;
 use App\Models\District;
 use App\Models\WithdrawRequest;
+use App\Models\EmployeeRelation;
 
 class Employee extends Model
 {
+    use HasFactory;
+
     protected $casts = [
         'joining_date' => 'datetime',
         'date_of_birth' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function ($employee) {
+            if (empty($employee->account_number)) {
+                do {
+                    $accountNumber = now()->format('Ymd')
+                        . str_pad(
+                            (string) random_int(0, 9999),
+                            4,
+                            '0',
+                            STR_PAD_LEFT
+                        );
+                } while (
+                    static::where(
+                        'account_number',
+                        $accountNumber
+                    )->exists()
+                );
+
+                $employee->account_number = $accountNumber;
+            }
+        });
+    }
+
     protected $fillable = [
         'company_id',
         'branch_id',
@@ -28,6 +56,7 @@ class Employee extends Model
         'employment_type',
         'district',
         'employee_code',
+        'account_number',
         'user_id',
         'ledger_id',
         'first_name',
@@ -54,10 +83,13 @@ class Employee extends Model
         'emergency_contact_relation',
         'emergency_contact_phone',
         'status',
-        'created_by'
+        'created_by',
     ];
 
-    // ✅ Relationships
+
+    // =========================
+    // Basic Relationships
+    // =========================
 
     public function company()
     {
@@ -87,14 +119,18 @@ class Employee extends Model
     {
         return $this->belongsTo(
             EmploymentType::class,
-            'employment_type', // FK column in employees table
+            'employment_type',
             'id'
         );
     }
 
     public function districtInfo()
     {
-        return $this->belongsTo(District::class, 'district', 'id');
+        return $this->belongsTo(
+            District::class,
+            'district',
+            'id'
+        );
     }
 
     public function creator()
@@ -106,10 +142,16 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // =========================
+    // Salary / Accounting
+    // =========================
+
     public function salaryStructure()
     {
         return $this->hasOne(SalaryStructure::class);
     }
+
     public function ledger()
     {
         return $this->belongsTo(Ledger::class, 'ledger_id');
@@ -122,11 +164,29 @@ class Employee extends Model
 
     public function withdrawRequests()
     {
-        return $this->hasMany(WithdrawRequest::class, 'employee_id');
+        return $this->morphMany(WithdrawRequest::class, 'reference');
     }
 
     public function beneficiaries()
     {
         return $this->hasMany(Beneficiary::class);
+    }
+
+
+    public function parentRelations()
+    {
+        return $this->hasMany(
+            EmployeeRelation::class,
+            'child_employee_id'
+        );
+    }
+
+
+    public function childRelations()
+    {
+        return $this->hasMany(
+            EmployeeRelation::class,
+            'parent_employee_id'
+        );
     }
 }

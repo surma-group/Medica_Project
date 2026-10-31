@@ -9,6 +9,7 @@
                     <h4>Employees</h4>
                     <a href="{{ route('employees.create') }}" class="btn btn-primary">Add Employee</a>
                 </div>
+
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table id="employeeTable" class="table table-striped table-md">
@@ -16,13 +17,13 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Employee Code</th>
+                                    <th>Account No.</th>
                                     <th>Full Name</th>
                                     <th>Mobile</th>
                                     <th>Company</th>
                                     <th>Branch</th>
                                     <th>Department</th>
                                     <th>Designation</th>
-                                    <th>Joining Date</th>
                                     <th>Status</th>
                                     <th>Set Salary</th>
                                     <th>Action</th>
@@ -33,13 +34,13 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $employee->employee_code }}</td>
+                                    <td>{{ $employee->account_number }}</td>
                                     <td>{{ $employee->full_name }}</td>
                                     <td>{{ $employee->mobile }}</td>
                                     <td>{{ $employee->company->company_name ?? '-' }}</td>
                                     <td>{{ $employee->branch->branch_name ?? '-' }}</td>
                                     <td>{{ $employee->department->name ?? '-' }}</td>
                                     <td>{{ $employee->designation->name ?? '-' }}</td>
-                                    <td>{{ $employee->joining_date?->format('Y-m-d') ?? '-' }}</td>
                                     <td>
                                         @if($employee->status == 1)
                                         <div class="badge badge-success">Active</div>
@@ -55,6 +56,7 @@
                                             Set Salary
                                         </button>
                                     </td>
+                                    
                                     <td>
                                         <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-warning">
                                             Edit

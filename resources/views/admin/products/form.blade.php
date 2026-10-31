@@ -28,11 +28,25 @@
             <!-- Left -->
             <div class="col-md-6">
 
+                <!-- Image -->
+                <div class="form-group">
+                    <label>Product Image</label>
+                    <input type="file" name="image" class="form-control">
+                    <input type="hidden" name="from" value="{{ request('from') }}">
+
+                    @if(isset($product) && $product->image)
+                    <div class="mt-2">
+                        <img src="{{ asset('/public/storage/' . $product->image) }}"
+                            width="120" class="rounded">
+                    </div>
+                    @endif
+                </div>
+
                 <!-- Name -->
                 <div class="form-group">
                     <label>Product Name *</label>
                     <input type="text" name="name" class="form-control"
-                        value="{{ old('name', $product->name ?? '') }}" required>
+                        value="{{ old('name', $product->name ?? '') }}">
                 </div>
 
                 <!-- Barcode -->
@@ -62,21 +76,6 @@
                     <input type="text" name="strength" class="form-control"
                         value="{{ old('strength', $product->strength ?? '') }}">
                 </div>
-
-                <!-- Manufacturer -->
-                <div class="form-group">
-                    <label>Manufacturer Name</label>
-                    <input type="text" name="manufacturer_name" class="form-control"
-                        value="{{ old('manufacturer_name', $product->manufacturer_name ?? '') }}">
-                </div>
-
-                <!-- Price -->
-                <div class="form-group">
-                    <label>Price *</label>
-                    <input type="number" step="0.01" name="price" class="form-control"
-                        value="{{ old('price', $product->price ?? 0) }}" required>
-                </div>
-
             </div>
 
             <!-- Right -->
@@ -132,18 +131,11 @@
                         <option value="0" {{ old('status', $product->status ?? 1) == 0 ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
-
-                <!-- Image -->
+                <!-- Manufacturer -->
                 <div class="form-group">
-                    <label>Product Image</label>
-                    <input type="file" name="image" class="form-control">
-
-                    @if(isset($product) && $product->image)
-                    <div class="mt-2">
-                        <img src="{{ asset('storage/' . $product->image) }}"
-                            width="120" class="rounded">
-                    </div>
-                    @endif
+                    <label>Manufacturer Name</label>
+                    <input type="text" name="manufacturer_name" class="form-control"
+                        value="{{ old('manufacturer_name', $product->manufacturer_name ?? '') }}">
                 </div>
 
             </div>

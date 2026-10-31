@@ -12,13 +12,23 @@ use Illuminate\Support\Facades\Response;
 class ProductCompanyController extends Controller
 {
 
-    /**
-     * Display a listing
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $companies = ProductCompany::orderBy('company_order')
-            ->paginate(10);
+        $query = ProductCompany::query();
+
+        // Search by company name
+        if ($request->filled('search')) {
+            $query->where('company_name', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $companies = $query->orderBy('company_order')
+            ->paginate(100)
+            ->withQueryString();
 
         return view('admin.product_company.index', compact('companies'));
     }

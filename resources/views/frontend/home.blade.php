@@ -11,9 +11,8 @@
 
             {{-- Left Content --}}
             <div class="col-md-12 col-lg-7">
-                <h4 class="mb-3 text-secondary">100% Organic Foods</h4>
-                <h1 class="mb-5 display-3 text-primary">Organic Veggies & Fruits Foods</h1>
-
+                <h4 class="mb-3 text-secondary">100% Genuine Medicines</h4>
+                <h1 class="mb-5 display-3 text-primary">Your Trusted Partner in Healthcare</h1>
                 <div class="position-relative mx-auto">
                     <input class="form-control border-2 border-secondary w-75 py-3 px-4 rounded-pill" type="text" placeholder="Search">
                     <button type="submit"
@@ -31,12 +30,12 @@
 
                         <div class="carousel-item active rounded">
                             <img src="{{ asset('website/img/hero-img-1.png') }}" class="img-fluid w-100 h-100 bg-secondary rounded" alt="">
-                            <a href="#" class="btn px-4 py-2 text-white rounded">Fruits</a>
+                            <a href="#" class="btn px-4 py-2 text-white rounded">Medicine</a>
                         </div>
 
                         <div class="carousel-item rounded">
                             <img src="{{ asset('website/img/hero-img-2.jpg') }}" class="img-fluid w-100 h-100 rounded" alt="">
-                            <a href="#" class="btn px-4 py-2 text-white rounded">Vegetables</a>
+                            <a href="#" class="btn px-4 py-2 text-white rounded">Cosmetics</a>
                         </div>
 
                     </div>
@@ -69,19 +68,24 @@
 
             @foreach($products as $product)
 
+            @php
+                $price = optional($product->prices->first())->price;
+            @endphp
+
             <div class="border border-primary rounded position-relative vesitable-item">
 
                 {{-- IMAGE --}}
                 <div class="vesitable-img" style="height: 220px; overflow: hidden;">
                     <img
                         src="{{ $product->image 
-                ? asset('storage/'.$product->image) 
-                : asset('website/img/product.jpg') }}"
+                            ? asset('/public/storage/'.$product->image) 
+                            : asset('website/img/product.jpg') }}"
                         class="img-fluid w-100 h-100"
                         style="object-fit: cover;"
                         alt="{{ $product->name }}">
                 </div>
 
+                {{-- CATEGORY --}}
                 <div class="text-white bg-primary px-3 py-1 rounded position-absolute"
                     style="top:10px; right:10px;">
                     {{ $product->category->name ?? 'Product' }}
@@ -93,15 +97,20 @@
                     <p>{{ $product->strength }}</p>
 
                     <div class="d-flex justify-content-between">
-                        <p class="fw-bold">${{ $product->price }}</p>
+                        
+                        {{-- PRICE --}}
+                        <p class="fw-bold mb-0">
+                            ${{ number_format($price ?? 0, 2) }}
+                        </p>
 
+                        {{-- ADD TO CART --}}
                         <form action="{{ route('cart.add', $product->id) }}" method="POST">
                             @csrf
-
                             <button type="submit" class="btn border rounded-pill text-primary">
                                 Add to cart
                             </button>
                         </form>
+
                     </div>
                 </div>
 
@@ -110,6 +119,7 @@
             @endforeach
 
         </div>
+
         {{-- VIEW ALL BUTTON --}}
         <div class="text-center mt-4">
             <a href="{{ route('shop') }}"
@@ -117,6 +127,7 @@
                 View All Products
             </a>
         </div>
+
     </div>
 </div>
 <!-- Vesitable Shop End-->
@@ -179,32 +190,53 @@
 
         <div class="row g-4">
 
-            @for($i=1; $i<=6; $i++)
+            @foreach($products->take(6) as $product)
+
+                @php
+                    $price = optional($product->prices->first())->price;
+                @endphp
+
                 <div class="col-lg-6 col-xl-4">
-                <div class="p-4 rounded bg-light">
-                    <div class="row align-items-center">
+                    <div class="p-4 rounded bg-light">
+                        <div class="row align-items-center">
 
-                        <div class="col-6">
-                            <img src="{{ asset('website/img/best-product-'.$i.'.jpg') }}"
-                                class="img-fluid rounded-circle w-100">
-                        </div>
-
-                        <div class="col-6">
-                            <h5>Organic Tomato</h5>
-                            <div class="mb-2 text-primary">
-                                ★★★★☆
+                            {{-- Image --}}
+                            <div class="col-6">
+                                <img src="{{ $product->image 
+                                            ? asset('/public/storage/'.$product->image) 
+                                            : asset('website/img/product.jpg') }}"
+                                    class="img-fluid rounded-circle w-100"
+                                    style="object-fit: cover; height:150px;"
+                                    alt="{{ $product->name }}">
                             </div>
-                            <h4>$3.12</h4>
-                            <a href="#" class="btn border rounded-pill text-primary">
-                                Add to cart
-                            </a>
-                        </div>
 
+                            {{-- Details --}}
+                            <div class="col-6">
+                                <h5>{{ $product->name }}</h5>
+
+                                <div class="mb-2 text-primary">
+                                    ★★★★☆
+                                </div>
+
+                                <h4>
+                                    ${{ number_format($price ?? 0, 2) }}
+                                </h4>
+
+                                <form action="{{ route('cart.add', $product->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn border rounded-pill text-primary">
+                                        Add to cart
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-        </div>
-        @endfor
 
+            @endforeach
+
+        </div>
     </div>
 </div>
 </div>
