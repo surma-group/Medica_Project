@@ -67,6 +67,10 @@ class AppServiceProvider extends ServiceProvider
         if (!defined('VT_PARTNER_TRANSFER')) {
             define('VT_PARTNER_TRANSFER', 9);
         }
+
+         if (!defined('VT_ORDER_DELIVERY')) {
+            define('VT_ORDER_DELIVERY', 10);
+        }
         
 
         //Chart of Accounts

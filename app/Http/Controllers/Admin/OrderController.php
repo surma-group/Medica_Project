@@ -10,6 +10,7 @@ use App\Models\UserType;
 use App\Models\Partner;
 use App\Models\Setting;
 use App\Models\Employee;
+use App\Models\OrderTransfer;
 
 class OrderController extends Controller
 {
@@ -29,17 +30,8 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-
-
-
     public function accepted(Request $request)
     {
-        /*
-    |--------------------------------------------------------------------------
-    | Accepted Orders Query
-    |--------------------------------------------------------------------------
-    */
-
         $query = Order::with([
             'userType',
             'customer',
@@ -60,25 +52,100 @@ class OrderController extends Controller
             $query->where('user_type_id', $request->user_type);
         }
 
+        $status = $request->status;
+
+        // 1. Just Accepted
+        // Admin এখনো Dealer-এর কাছে Transfer তৈরি করেনি
+        if ($status === 'just_accepted') {
+
+            $query->whereNotExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('order_transfers as ot')
+                    ->whereColumn('ot.order_id', 'orders.id')
+                    ->where('ot.from_type', USER_TYPE_ADMIN)
+                    ->where('ot.to_type', USER_TYPE_DEALER)
+                    ->where('ot.status', '!=', 4);
+            });
+        }
+
+        // 2. Dealer Assigned
+        // Admin থেকে Dealer-এর কাছে Transfer তৈরি হয়েছে
+        elseif ($status === 'dealer_assigned') {
+
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('order_transfers as ot')
+                    ->whereColumn('ot.order_id', 'orders.id')
+                    ->where('ot.from_type', USER_TYPE_ADMIN)
+                    ->where('ot.to_type', USER_TYPE_DEALER)
+                    ->where('ot.status', '!=', 4);
+            });
+        }
+
+        // 3. Delivery Man Assigned
+        // Dealer থেকে Agent-এর কাছে Transfer তৈরি হয়েছে
+        // এবং Delivery Man Assign করা হয়েছে
+        elseif ($status === 'delivery_man_assigned') {
+
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('order_transfers as ot')
+                    ->whereColumn('ot.order_id', 'orders.id')
+                    ->where('ot.from_type', USER_TYPE_DEALER)
+                    ->where('ot.to_type', USER_TYPE_AGENT)
+                    ->whereNotNull('ot.assigned_employee_id')
+                    ->where('ot.status', '!=', 4);
+            });
+        }
+
+        // 4. Dealer Accepted
+        // Admin থেকে Dealer-এর Transfer Received হয়েছে
+        elseif ($status === 'dealer_accepted') {
+
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('order_transfers as ot')
+                    ->whereColumn('ot.order_id', 'orders.id')
+                    ->where('ot.from_type', USER_TYPE_ADMIN)
+                    ->where('ot.to_type', USER_TYPE_DEALER)
+                    ->where('ot.status', 3);
+            });
+        }
+
+        // 5. Completed
+        // Agent সব পণ্যের সম্পূর্ণ Quantity Receive করেছে
+        elseif ($status === 'completed') {
+
+            $query->whereRaw("
+            (
+                SELECT COALESCE(SUM(oti.quantity_received), 0)
+                FROM order_transfer_items AS oti
+                INNER JOIN order_transfers AS ot
+                    ON ot.id = oti.order_transfer_id
+                WHERE ot.order_id = orders.id
+                  AND ot.from_type = ?
+                  AND ot.to_type = ?
+                  AND ot.status = 3
+            ) >= (
+                SELECT COALESCE(SUM(oi.quantity), 0)
+                FROM order_items AS oi
+                WHERE oi.order_id = orders.id
+            )
+        ", [
+                USER_TYPE_DEALER,
+                USER_TYPE_AGENT
+            ]);
+        }
+
+
         $orders = $query->latest()
             ->paginate(20)
             ->appends($request->all());
 
         $userTypes = UserType::where('status', 1)->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Calculate Order Transfer Status
-        |--------------------------------------------------------------------------
-        | Not Assigned   = কোনো পণ্য Transfer করা হয়নি
-        | Partially Sent = কিছু পণ্য Transfer হয়েছে, কিছু বাকি
-        | Fully Sent     = সব পণ্যের সম্পূর্ণ Quantity Transfer হয়েছে
-        */
-
         $orderIds = $orders->getCollection()->pluck('id');
 
-        // প্রতিটি Order-এর মোট Ordered Quantity
         $orderedQuantities = DB::table('order_items')
             ->whereIn('order_id', $orderIds)
             ->select(
@@ -88,11 +155,6 @@ class OrderController extends Controller
             ->groupBy('order_id')
             ->pluck('total_quantity', 'order_id');
 
-        /*
-        * শুধু Sent এবং Received Transfer-এর Quantity গণনা হবে।
-        * Status: 2 = Sent, 3 = Received
-        * Pending, Assigned এবং Cancelled Transfer গণনা হবে না।
-        */
         $transferredQuantities = DB::table('order_transfer_items as oti')
             ->join(
                 'order_transfers as ot',
@@ -101,6 +163,8 @@ class OrderController extends Controller
                 'ot.id'
             )
             ->whereIn('ot.order_id', $orderIds)
+            ->where('ot.from_type', USER_TYPE_ADMIN)
+            ->where('ot.to_type', USER_TYPE_DEALER)
             ->whereIn('ot.status', [2, 3])
             ->select(
                 'ot.order_id',
@@ -109,7 +173,6 @@ class OrderController extends Controller
             ->groupBy('ot.order_id')
             ->pluck('total_quantity', 'order_id');
 
-        // প্রতিটি Order-এর Transfer Status নির্ধারণ
         $orders->getCollection()->transform(function ($order) use (
             $orderedQuantities,
             $transferredQuantities
@@ -137,13 +200,6 @@ class OrderController extends Controller
             return $order;
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Transit Officer Designation from Settings
-        |--------------------------------------------------------------------------
-        */
-
         $transitOfficerSetting = Setting::where('slug', 'transitOfficer')
             ->where('status', 1)
             ->first();
@@ -161,13 +217,6 @@ class OrderController extends Controller
                 ->orderBy('full_name')
                 ->get();
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Medicine Summary
-        |--------------------------------------------------------------------------
-        */
 
         $medicineList = DB::table('order_items')
             ->join(
@@ -207,12 +256,6 @@ class OrderController extends Controller
             ->get();
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Return View
-        |--------------------------------------------------------------------------
-        */
-
         return view('admin.orders.accepted', compact(
             'orders',
             'userTypes',
@@ -221,7 +264,28 @@ class OrderController extends Controller
         ));
     }
 
+    public function track($id)
+    {
+        // Find Order
+        $order = Order::with([
+            'items.product',
+        ])->findOrFail($id);
 
+        // Find all transfers related to this order
+        $transfers = OrderTransfer::with([
+            'assignedEmployee',
+            'sourceTransfer',
+            'items.orderItem.product',
+        ])
+            ->where('order_id', $order->id)
+            ->orderBy('created_at')
+            ->get();
+
+        return view('admin.orders.track', compact(
+            'order',
+            'transfers'
+        ));
+    }
 
     /**
      * Show single order details
