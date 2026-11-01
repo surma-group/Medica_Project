@@ -117,4 +117,9 @@ class Order extends Model
     {
         return $query->where('status', ORDER_STATUS_REJECTED);
     }
+
+    public function transfers()
+    {
+        return $this->hasMany(OrderTransfer::class, 'order_id');
+    }
 }

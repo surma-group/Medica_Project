@@ -32,6 +32,56 @@
 
                 </div>
 
+                <form action="{{ route('partner.orders') }}" method="GET" class="row g-3 mb-4">
+
+                    <div class="col-md-3">
+                        <label for="from_date" class="form-label">From Date</label>
+                        <input
+                            type="date"
+                            name="from_date"
+                            id="from_date"
+                            class="form-control"
+                            value="{{ request('from_date', now()->subMonth()->format('Y-m-d')) }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="to_date" class="form-label">To Date</label>
+                        <input
+                            type="date"
+                            name="to_date"
+                            id="to_date"
+                            class="form-control"
+                            value="{{ request('to_date', now()->format('Y-m-d')) }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Order Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="pending"
+                                {{ request('status', 'pending') == 'pending' ? 'selected' : '' }}>
+                                Pending Orders
+                            </option>
+
+                            <option value="completed"
+                                {{ request('status') == 'completed' ? 'selected' : '' }}>
+                                Completed Orders
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+
+                        <a href="{{ route('partner.orders') }}" class="btn btn-secondary">
+                            Reset
+                        </a>
+                    </div>
+
+                </form>
+
+
                 {{-- TABLE --}}
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -103,15 +153,20 @@
                                         @foreach($orderTransfers as $transfer)
                                         @if((int) $transfer->status === 2)
                                         <button type="button"
-                                            class="btn btn-sm btn-primary receive-transfer-btn"
+                                            class="btn btn-sm btn-primary"
                                             data-bs-toggle="modal"
                                             data-bs-target="#receiveTransferModal"
+
                                             data-id="{{ $transfer->id }}"
                                             data-number="{{ $transfer->transfer_number }}"
                                             data-amount="{{ number_format((float) $order->grand_total, 2, '.', '') }}"
-                                            data-employee="{{ $transfer->assigned_employee_id }}">
+
+                                            data-name="{{ $transfer->assignedEmployee->full_name ?? '' }}"
+                                            data-code="{{ $transfer->assignedEmployee->employee_code ?? '' }}"
+                                            data-account="{{ $transfer->assignedEmployee->account_number ?? '' }}">
 
                                             <i class="fas fa-box-open"></i> Receive
+
                                         </button>
                                         @elseif((int) $transfer->status === 3)
                                         <span class="badge bg-success">Received</span>
@@ -170,29 +225,43 @@
 
                 <div class="modal-body">
 
+                    {{-- Transfer Number --}}
                     <div class="mb-3">
                         <label class="form-label">Transfer Number</label>
-                        <input type="text" id="receiveTransferNumber"
-                            class="form-control" readonly>
+
+                        <input type="text"
+                            id="receiveTransferNumber"
+                            class="form-control"
+                            readonly>
                     </div>
 
+                    {{-- Assigned Delivery Man Information --}}
                     <div class="mb-3">
-                        <label class="form-label">Delivery Man Account</label>
+                        <label class="form-label">
+                            <i class="fas fa-user text-primary"></i>
+                            Assigned Delivery Man
+                        </label>
 
-                        <select name="assigned_employee_id"
-                            id="receiveDeliveryMan"
-                            class="form-select" required>
+                        <div id="deliveryManInfo"
+                            class="border rounded p-3"
+                            style="background: #f8f9fa;">
 
-                            @foreach($deliveryMen as $deliveryMan)
-                            <option value="{{ $deliveryMan->id }}">
-                                {{ $deliveryMan->full_name }}
-                                ({{ $deliveryMan->employee_code }})
-                            </option>
-                            @endforeach
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-user-circle text-primary me-2"
+                                    style="font-size: 22px;"></i>
 
-                        </select>
+                                <strong id="deliveryManName">-</strong>
+                            </div>
+
+                            <div class="mb-1">
+                                <small class="text-muted">Account Number:</small>
+                                <span id="deliveryManAccount">-</span>
+                            </div>
+
+                        </div>
                     </div>
 
+                    {{-- Order Amount --}}
                     <div class="mb-3">
                         <label class="form-label">Order Amount</label>
 
@@ -207,20 +276,24 @@
                     </div>
 
                     <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle"></i>
                         Confirm করলে এই Transfer-এর সব পণ্য Received হবে।
                     </div>
 
                 </div>
 
                 <div class="modal-footer">
+
                     <button type="button" class="btn btn-secondary"
                         data-bs-dismiss="modal">
                         Cancel
                     </button>
 
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-check"></i> Confirm Receive
+                        <i class="fas fa-check"></i>
+                        Confirm Receive
                     </button>
+
                 </div>
 
             </form>
@@ -246,21 +319,26 @@
 
             const transferId = button.dataset.id;
 
+            // Transfer Number
             document.getElementById('receiveTransferNumber').value =
                 button.dataset.number || '';
 
+            // Order Amount
             document.getElementById('receiveTransferAmount').value =
                 button.dataset.amount || '';
 
-            document.getElementById('receiveDeliveryMan').value =
-                button.dataset.employee || '';
+            // Assigned Delivery Man
+            document.getElementById('deliveryManName').textContent =
+                button.dataset.name || 'Not Assigned';
 
-            const urlTemplate = @json(route(
-                'partner.orders.receive-transfer',
-                ['id' => '__ID__']
-            ));
+            document.getElementById('deliveryManAccount').textContent =
+                button.dataset.account || '-';
+
+            // Receive Form Action
+            const urlTemplate = @json(route('partner.orders.receive-transfer', ['id' => '__ID__']));
 
             form.action = urlTemplate.replace('__ID__', transferId);
+
         });
 
     });
