@@ -42,6 +42,29 @@
                 </a>
             </li>
 
+            {{-- Delivery Management --}}
+            @php
+            $employee = auth()->user()->employee;
+            $deliveryManSetting = \App\Models\Setting::where('slug', 'deliveryMan')
+            ->where('status', 1)
+            ->first();
+
+            $isDeliveryMan = $employee
+            && $deliveryManSetting
+            && (int) $employee->designation_id === (int) $deliveryManSetting->value;
+            @endphp
+
+            @if ($isDeliveryMan)
+            <li class="menu-header">Delivery Management</li>
+
+            <li class="{{ request()->routeIs('employee.delivery-orders.*') ? 'active' : '' }}">
+                <a href="{{ route('employee.delivery-orders.index') }}" class="nav-link">
+                    <i data-feather="truck"></i>
+                    <span>Delivery Orders</span>
+                </a>
+            </li>
+            @endif
+
         </ul>
     </aside>
 </div>

@@ -18,18 +18,22 @@
 
                 <div class="card-body">
 
-                    <form action="{{ route('partner.orders.update', $order->id) }}"
+                    <form id="orderForm"
+                        action="{{ route('partner.orders.update', $order->id) }}"
                         method="POST">
+
                         @csrf
                         @method('PUT')
 
                         {{-- PRODUCT PREVIEW --}}
                         <div id="productPreview" class="card mb-4 d-none">
                             <div class="card-body">
+
                                 <div class="row align-items-center">
 
                                     <div class="col-md-3 text-center">
                                         <img id="previewImage"
+                                            src=""
                                             class="img-fluid rounded border"
                                             style="max-height:180px">
                                     </div>
@@ -39,6 +43,7 @@
                                         <h4 id="previewName"></h4>
 
                                         <div class="row">
+
                                             <div class="col-md-4">
                                                 <strong>Price:</strong>
                                                 <span id="previewPrice"></span>
@@ -53,6 +58,7 @@
                                                 <strong>Strength:</strong>
                                                 <span id="previewStrength"></span>
                                             </div>
+
                                         </div>
 
                                         <div class="row mt-2">
@@ -65,16 +71,19 @@
                                     </div>
 
                                 </div>
+
                             </div>
                         </div>
 
                         <div class="row">
 
                             {{-- COMPANY --}}
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Company</label>
 
-                                <select id="company_id" class="form-control select2">
+                                <select id="company_id"
+                                    class="form-control select2">
+
                                     <option value="">Select Company</option>
 
                                     @foreach($companies as $company)
@@ -82,17 +91,33 @@
                                         {{ $company->company_name }}
                                     </option>
                                     @endforeach
+
                                 </select>
                             </div>
 
                             {{-- PRODUCT --}}
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Product</label>
 
                                 <select id="product_id"
                                     class="form-control select2"
                                     disabled>
+
                                     <option value="">Select Company First</option>
+
+                                </select>
+                            </div>
+
+                            {{-- UNIT --}}
+                            <div class="col-md-2">
+                                <label class="form-label">Unit</label>
+
+                                <select id="unit_id"
+                                    class="form-control"
+                                    disabled>
+
+                                    <option value="">Select Unit</option>
+
                                 </select>
                             </div>
 
@@ -102,7 +127,8 @@
 
                                 <input type="number"
                                     id="price"
-                                    class="form-control">
+                                    class="form-control"
+                                    readonly>
                             </div>
 
                             {{-- QTY --}}
@@ -119,15 +145,20 @@
                         </div>
 
                         <div class="mt-3">
+
                             <button type="button"
                                 id="addItem"
                                 class="btn btn-primary">
+
                                 + Add Product
+
                             </button>
+
                         </div>
 
                         <hr>
 
+                        {{-- CART TABLE --}}
                         <div class="table-responsive">
 
                             <table class="table table-bordered">
@@ -135,6 +166,7 @@
                                 <thead>
                                     <tr>
                                         <th>Product</th>
+                                        <th>Unit</th>
                                         <th>Price</th>
                                         <th>Qty</th>
                                         <th>Total</th>
@@ -149,9 +181,14 @@
                         </div>
 
                         <div class="text-end mt-3">
-                            <button type="submit" class="btn btn-success">
+
+                            <button type="submit"
+                                class="btn btn-success">
+
                                 Update Order
+
                             </button>
+
                         </div>
 
                     </form>
@@ -172,125 +209,324 @@
 
 <script>
     $(document).ready(function() {
+
         $('.select2').select2({
             width: '100%'
         });
+
     });
 
-    /* ================= EXISTING CART (FROM DB) ================= */
+
+    /* ================= EXISTING CART ================= */
+
     let cart = @json($cart);
 
     let editModeIndex = null;
 
-    /* initial render */
+    let availableUnits = [];
+
+
+    /* ================= INITIAL RENDER ================= */
+
     renderCart();
 
+
+    /* ================= RESET PRODUCT ================= */
+
+    function resetProduct() {
+
+        availableUnits = [];
+
+        $('#unit_id')
+            .html('<option value="">Select Unit</option>')
+            .prop('disabled', true);
+
+        $('#price').val('');
+
+        $('#productPreview').addClass('d-none');
+
+    }
+
+
     /* ================= COMPANY PRODUCTS ================= */
+
     $('#company_id').on('change', function() {
 
         let companyId = $(this).val();
 
-        $('#productPreview').addClass('d-none');
+        resetProduct();
 
         if (!companyId) {
+
             $('#product_id')
-                .html('<option>Select Company First</option>')
+                .html('<option value="">Select Company First</option>')
                 .prop('disabled', true);
+
             return;
         }
 
         $.ajax({
+
             url: '/partner/orders/company-products/' + companyId,
             type: 'GET',
+
             beforeSend: function() {
+
                 $('#product_id')
-                    .html('<option>Loading...</option>')
+                    .html('<option value="">Loading Products...</option>')
                     .prop('disabled', true);
+
             },
+
             success: function(products) {
 
                 let html = '<option value="">Select Product</option>';
 
                 products.forEach(p => {
-                    html += `<option value="${p.id}">
-                            ${p.name} (${p.strength})
-                         </option>`;
+
+                    html += `
+                    <option value="${p.id}">
+                        ${p.name} (${p.strength ?? ''})
+                    </option>
+                `;
+
                 });
 
                 $('#product_id')
                     .html(html)
                     .prop('disabled', false);
+
+            },
+
+            error: function() {
+
+                alert('Unable to load products.');
+
             }
+
         });
+
     });
 
+
     /* ================= PRODUCT DETAILS ================= */
+
     $('#product_id').on('change', function() {
 
         let productId = $(this).val();
 
+        resetProduct();
+
         if (!productId) {
-            $('#productPreview').addClass('d-none');
-            $('#price').val('');
             return;
         }
 
-        $.get('/partner/orders/product-details/' + productId, function(p) {
+        $.ajax({
 
-            $('#price').val(p.price);
+            url: '/partner/orders/product-details/' + productId,
+            type: 'GET',
 
-            $('#previewImage').attr('src', p.image);
-            $('#previewName').text(p.name);
-            $('#previewPrice').text(p.price);
-            $('#previewBarcode').text(p.barcode ?? '-');
-            $('#previewStrength').text(p.strength ?? '-');
-            $('#previewManufacturer').text(p.manufacturer_name ?? '-');
+            beforeSend: function() {
 
-            $('#productPreview').removeClass('d-none');
+                $('#unit_id')
+                    .html('<option value="">Loading Units...</option>')
+                    .prop('disabled', true);
+
+            },
+
+            success: function(p) {
+
+                // Product Preview
+                $('#previewImage').attr('src', p.image);
+
+                $('#previewName').text(p.name);
+
+                $('#previewBarcode').text(p.barcode ?? '-');
+
+                $('#previewStrength').text(p.strength ?? '-');
+
+                $('#previewManufacturer').text(
+                    p.manufacturer_name ?? '-'
+                );
+
+                $('#productPreview').removeClass('d-none');
+
+                // Available Units
+                availableUnits = p.units || [];
+
+                let html = '<option value="">Select Unit</option>';
+
+                availableUnits.forEach(unit => {
+
+                    html += `
+                    <option value="${unit.id}">
+                        ${unit.name}
+                    </option>
+                `;
+
+                });
+
+                $('#unit_id')
+                    .html(html)
+                    .prop('disabled', availableUnits.length === 0);
+
+                // Select first available unit
+                if (availableUnits.length > 0) {
+
+                    $('#unit_id')
+                        .val(availableUnits[0].id)
+                        .trigger('change');
+
+                } else {
+
+                    $('#previewPrice').text('No price available');
+
+                    alert('No active price available for this product.');
+
+                }
+
+            },
+
+            error: function() {
+
+                alert('Unable to load product details.');
+
+                resetProduct();
+
+            }
+
         });
+
     });
 
+
+    /* ================= UNIT CHANGE ================= */
+
+    $('#unit_id').on('change', function() {
+
+        let unitId = $(this).val();
+
+        let selectedUnit = availableUnits.find(
+            unit => unit.id == unitId
+        );
+
+        if (!selectedUnit) {
+
+            $('#price').val('');
+
+            $('#previewPrice').text('');
+
+            return;
+        }
+
+        // Unit-wise Price
+        $('#price').val(selectedUnit.price);
+
+        $('#previewPrice').text(selectedUnit.price);
+
+    });
+
+
     /* ================= ADD ITEM ================= */
+
     $('#addItem').on('click', function() {
 
         let productId = $('#product_id').val();
-        let productName = $('#product_id option:selected').text();
-        let price = parseFloat($('#price').val());
+
+        let productName = $('#product_id option:selected')
+            .text()
+            .trim();
+
+        let unitId = $('#unit_id').val();
+
+        let selectedUnit = availableUnits.find(
+            unit => unit.id == unitId
+        );
+
+        let price = selectedUnit ?
+            parseFloat(selectedUnit.price) :
+            0;
+
         let qty = parseInt($('#qty').val());
 
-        if (!productId || !price || !qty) return;
+        if (!productId) {
 
-        let existing = cart.find(i => i.id == productId);
+            alert('Please select a product.');
+
+            return;
+        }
+
+        if (!selectedUnit || !unitId) {
+
+            alert('Please select a unit.');
+
+            return;
+        }
+
+        if (isNaN(qty) || qty < 1) {
+
+            alert('Please enter a valid quantity.');
+
+            return;
+        }
+
+        // Same Product + Same Unit
+        let existing = cart.find(item =>
+            item.id == productId &&
+            item.unit_id == unitId
+        );
 
         if (existing) {
+
             existing.qty = parseInt(existing.qty) + qty;
+
         } else {
+
             cart.push({
+
                 id: productId,
+
                 name: productName,
+
+                unit_id: unitId,
+
+                unit_name: selectedUnit.name,
+
                 price: price,
+
                 qty: qty
+
             });
+
         }
 
         renderCart();
 
+        // Reset Fields
         $('#product_id').val('').trigger('change');
-        $('#price').val('');
+
+        resetProduct();
+
         $('#qty').val(1);
+
     });
 
+
     /* ================= RENDER CART ================= */
+
     function renderCart() {
 
         let html = '';
+
         let total = 0;
 
         if (cart.length === 0) {
 
             html = `
             <tr>
-                <td colspan="5" class="text-center">No items</td>
+                <td colspan="6" class="text-center">
+                    No items
+                </td>
             </tr>
         `;
 
@@ -299,18 +535,24 @@
             cart.forEach((item, index) => {
 
                 let rowTotal = item.price * item.qty;
+
                 total += rowTotal;
 
                 html += `
                 <tr>
+
                     <td>${item.name}</td>
 
-                    <td>${item.price.toFixed(2)}</td>
+                    <td>${item.unit_name ?? 'Unit'}</td>
+
+                    <td>${parseFloat(item.price).toFixed(2)}</td>
 
                     <td>
+
                         ${
                             editModeIndex === index
-                            ? `<div class="d-flex align-items-center gap-1">
+                            ? `
+                                <div class="d-flex align-items-center gap-1">
 
                                     <button type="button"
                                         class="btn btn-sm btn-secondary"
@@ -322,6 +564,7 @@
                                         class="form-control form-control-sm text-center"
                                         style="width:60px"
                                         value="${item.qty}"
+                                        min="1"
                                         onchange="setQty(${index}, this.value)">
 
                                     <button type="button"
@@ -330,9 +573,11 @@
                                         +
                                     </button>
 
-                               </div>`
-                            : `${item.qty}`
+                                </div>
+                            `
+                            : `<span>${item.qty}</span>`
                         }
+
                     </td>
 
                     <td>${rowTotal.toFixed(2)}</td>
@@ -350,25 +595,38 @@
                         <button type="button"
                             class="btn btn-danger btn-sm"
                             onclick="removeItem(${index})">
+
                             X
+
                         </button>
 
                     </td>
+
                 </tr>
             `;
+
             });
 
             html += `
             <tr>
-                <td colspan="3" class="text-end"><b>Total</b></td>
-                <td colspan="2"><b>${total.toFixed(2)}</b></td>
+
+                <td colspan="4" class="text-end">
+                    <b>Total</b>
+                </td>
+
+                <td colspan="2">
+                    <b>${total.toFixed(2)}</b>
+                </td>
+
             </tr>
         `;
+
         }
 
         $('#cartTable').html(html);
 
-        $('input[name="cart"]').remove();
+        // Update Hidden Cart
+        $('#orderForm').find('input[name="cart"]').remove();
 
         $('<input>')
             .attr({
@@ -376,38 +634,59 @@
                 name: 'cart',
                 value: JSON.stringify(cart)
             })
-            .appendTo('form');
+            .appendTo('#orderForm');
+
     }
+
 
     /* ================= EDIT MODE ================= */
+
     function editItem(index) {
-        editModeIndex = (editModeIndex === index) ? null : index;
+
+        editModeIndex = (editModeIndex === index) ?
+            null :
+            index;
+
         renderCart();
+
     }
 
+
     /* ================= REMOVE ITEM ================= */
+
     function removeItem(index) {
 
         cart.splice(index, 1);
 
         if (editModeIndex === index) {
+
             editModeIndex = null;
+
         }
 
         renderCart();
+
     }
 
+
     /* ================= QTY CONTROL ================= */
+
     function changeQty(index, val) {
 
         if (editModeIndex !== index) return;
 
         cart[index].qty += val;
 
-        if (cart[index].qty < 1) cart[index].qty = 1;
+        if (cart[index].qty < 1) {
+
+            cart[index].qty = 1;
+
+        }
 
         renderCart();
+
     }
+
 
     function setQty(index, val) {
 
@@ -415,12 +694,34 @@
 
         let qty = parseInt(val);
 
-        if (isNaN(qty) || qty < 1) qty = 1;
+        if (isNaN(qty) || qty < 1) {
+
+            qty = 1;
+
+        }
 
         cart[index].qty = qty;
 
         renderCart();
+
     }
+
+
+    /* ================= FORM SUBMIT ================= */
+
+    $('#orderForm').on('submit', function(e) {
+
+        if (cart.length === 0) {
+
+            e.preventDefault();
+
+            alert('Please add at least one product.');
+
+            return false;
+
+        }
+
+    });
 </script>
 
 @endpush

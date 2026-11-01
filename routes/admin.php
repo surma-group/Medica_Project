@@ -72,7 +72,7 @@ Route::middleware(['auth:admin'])->group(function () {
         OrderController::class,
         'transferItems'
     ])->name('orders.transfer-items');
-    
+
     // Employee Management
     Route::resource('employees', EmployeeController::class);
     Route::get('employees/{employee}/print', [EmployeeController::class, 'print'])->name('employees.print');
@@ -261,6 +261,8 @@ Route::middleware(['auth:admin'])->group(function () {
 
         Route::get('/{order}', [OrderController::class, 'show'])
             ->name('show');
+        Route::get('/{order}/track', [OrderController::class, 'track'])
+            ->name('track');
 
         // UPDATE STATUS (Accept / Cancel / etc)
         Route::post('/{order}/status', [OrderController::class, 'updateStatus'])

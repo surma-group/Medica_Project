@@ -6,6 +6,7 @@ use App\Http\Controllers\Employee\EmployeeMarketingChainController;
 use App\Http\Controllers\Employee\EmployeeMarketingAreaTreeController;
 use App\Http\Controllers\Employee\EmployeeBeneficiariesController;
 use App\Http\Controllers\Employee\EmployeeWalletController;
+use App\Http\Controllers\Employee\EmployeeDeliveryOrderController;
 
 Route::middleware(['auth', 'employee'])->group(function () {
     Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
@@ -90,4 +91,20 @@ Route::middleware(['auth', 'employee'])->group(function () {
     Route::get('/holiday-calendar', function () {
         return view('employee.dashboard');
     })->name('employee.holiday.calendar');
+
+    // Delivery Management
+    Route::prefix('delivery-orders')->name('employee.delivery-orders.')->group(function () {
+
+        // Delivery Order List
+        Route::get(
+            '/',
+            [EmployeeDeliveryOrderController::class, 'index']
+        )->name('index');
+
+        // Delivery Order Details
+        Route::get(
+            '/{id}',
+            [EmployeeDeliveryOrderController::class, 'show']
+        )->name('show');
+    });
 });

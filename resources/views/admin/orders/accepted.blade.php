@@ -31,13 +31,13 @@
                     <form method="GET" action="{{ route('orders.accepted') }}" class="row g-2 mb-3">
 
                         {{-- From Date --}}
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input type="date" name="from_date" class="form-control"
                                 value="{{ request('from_date', now()->subDays(7)->toDateString()) }}">
                         </div>
 
                         {{-- To Date --}}
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input type="date" name="to_date" class="form-control"
                                 value="{{ request('to_date', now()->toDateString()) }}">
                         </div>
@@ -57,9 +57,41 @@
                             </select>
                         </div>
 
-                        {{-- Filter Button --}}
+                        {{-- Order Status --}}
                         <div class="col-md-3">
-                            <button class="btn btn-primary w-100">
+                            <select name="status" class="form-control">
+                                <option value="">All Statuses</option>
+
+                                <option value="just_accepted"
+                                    {{ request('status', 'just_accepted') == 'just_accepted' ? 'selected' : '' }}>
+                                    Accepted
+                                </option>
+
+                                <option value="dealer_assigned"
+                                    {{ request('status') == 'dealer_assigned' ? 'selected' : '' }}>
+                                    Dealer Assigned
+                                </option>
+
+                                <option value="delivery_man_assigned"
+                                    {{ request('status') == 'delivery_man_assigned' ? 'selected' : '' }}>
+                                    Delivery Man Assigned
+                                </option>
+
+                                <option value="dealer_accepted"
+                                    {{ request('status') == 'dealer_accepted' ? 'selected' : '' }}>
+                                    Dealer Accepted
+                                </option>
+
+                                <option value="completed"
+                                    {{ request('status') == 'completed' ? 'selected' : '' }}>
+                                    Completed
+                                </option>
+                            </select>
+                        </div>
+
+                        {{-- Filter Button --}}
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
                                 Filter
                             </button>
                         </div>
@@ -173,6 +205,10 @@
                                         <a href="{{ route('orders.show', $order->id) }}"
                                             class="btn btn-sm btn-info">
                                             View
+                                        </a>
+                                        <a href="{{ route('orders.track', $order->id) }}"
+                                            class="btn btn-sm btn-primary">
+                                            <i class="fas fa-map-marker-alt"></i> Track
                                         </a>
                                         @if($order->user_type_id == USER_TYPE_AGENT)
 
